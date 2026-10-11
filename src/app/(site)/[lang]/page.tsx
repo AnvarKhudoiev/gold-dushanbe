@@ -4,6 +4,7 @@ import { SHOP, resolveShop } from "@/lib/config";
 import { isLang } from "@/lib/i18n";
 import Catalog from "@/components/Catalog";
 import Cover from "@/components/Cover";
+import Hero from "@/components/Hero";
 import Dock from "@/components/Dock";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
@@ -25,8 +26,9 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   };
   return (
     <>
-      <SiteHeader lang={lang} altPath="/" logoUrl={settings.logo_url} name={shop.name} />
+      <SiteHeader lang={lang} altPath="/" logoUrl={settings.logo_url} name={shop.name} address={SHOP.address} whatsapp={shop.whatsapp} />
       <main>
+        <Hero lang={lang} heroUrl={settings.hero_url} />
         <Cover lang={lang} settings={settings} />
         <Catalog products={products} lang={lang} />
       </main>

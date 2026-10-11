@@ -6,7 +6,8 @@ export default function Art({ category }: { category: string }) {
       {category === "Кольца" && (
         <>
           <circle cx="100" cy="124" r="46" {...g} strokeWidth="7" />
-          <polygon points="100,34 122,58 100,84 78,58" fill="url(#gem)" stroke="url(#gold)" strokeWidth="3" />
+          <ellipse cx="100" cy="58" rx="21" ry="25" fill="url(#gem)" stroke="url(#gold)" strokeWidth="3" />
+          <path d="M84 50 Q100 60 116 50" fill="none" stroke="url(#gold)" strokeWidth="1.5" strokeLinecap="round" />
         </>
       )}
       {category === "Серьги" &&
@@ -17,18 +18,18 @@ export default function Art({ category }: { category: string }) {
             <circle cx={x} cy="104" r="7" fill="url(#ruby)" />
           </g>
         ))}
-      {category === "Цепочки" && <path d="M24 48 Q100 190 176 48" {...g} strokeWidth="6" strokeDasharray="11 6" />}
-      {category === "Браслеты" && <ellipse cx="100" cy="104" rx="72" ry="44" {...g} strokeWidth="8" strokeDasharray="14 6" />}
+      {category === "Цепочки" && <path d="M24 48 Q100 190 176 48" {...g} strokeWidth="7" strokeDasharray="0.1 11" />}
+      {category === "Браслеты" && <ellipse cx="100" cy="104" rx="72" ry="44" {...g} strokeWidth="9" strokeDasharray="0.1 13" />}
       {category === "Подвески" && (
         <>
-          <path d="M40 40 L100 108 L160 40" {...g} strokeWidth="3" />
+          <path d="M38 40 Q100 150 162 40" {...g} strokeWidth="3" />
           <path d="M100 168 c-34 -22 -42 -40 -30 -56 c10 -12 24 -8 30 4 c6 -12 20 -16 30 -4 c12 16 4 34 -30 56z" {...g} strokeWidth="5" strokeLinejoin="round" />
         </>
       )}
       {category === "Комплекты" && (
         <>
           <circle cx="70" cy="128" r="26" {...g} strokeWidth="6" />
-          <polygon points="70,70 82,84 70,100 58,84" fill="url(#gem)" stroke="url(#gold)" strokeWidth="2" />
+          <ellipse cx="70" cy="85" rx="11" ry="14" fill="url(#gem)" stroke="url(#gold)" strokeWidth="2" />
           <path d="M132 40 c-14 18 -16 34 0 46 c16 -12 14 -28 0 -46z" {...g} strokeWidth="4" />
           <path d="M168 40 c-14 18 -16 34 0 46 c16 -12 14 -28 0 -46z" {...g} strokeWidth="4" />
           <path d="M130 176 c-22 -14 -28 -26 -20 -36 c6 -8 16 -5 20 3 c4 -8 14 -11 20 -3 c8 10 2 22 -20 36z" {...g} strokeWidth="4" strokeLinejoin="round" />
@@ -46,9 +47,9 @@ export function CoverArt() {
       <g {...g}>
         <circle cx="150" cy="190" r="78" strokeWidth="9" />
         <circle cx="150" cy="190" r="96" strokeWidth="1" opacity=".5" />
-        <polygon points="150,32 190,72 150,122 110,72" fill="url(#gem)" strokeWidth="4" />
-        <polyline points="110,72 190,72" strokeWidth="2" />
-        <polyline points="150,32 135,72 150,122 165,72 150,32" strokeWidth="2" />
+        <ellipse cx="150" cy="76" rx="40" ry="46" fill="url(#gem)" strokeWidth="4" />
+        <path d="M112 68 Q150 84 188 68" strokeWidth="2" />
+        <path d="M150 32 Q132 76 150 120 Q168 76 150 32z" strokeWidth="2" />
       </g>
     </svg>
   );

@@ -1,88 +1,146 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { CATEGORIES, SET_CATEGORY, money } from "@/lib/config";
 import { T, pName, pDesc, prefix, type Lang } from "@/lib/i18n";
 import Photo from "./Photo";
+import { useStore } from "./StoreContext";
 
 type Cond = "all" | "new" | "used";
+type Sort = "def" | "asc" | "desc";
+
+const HEART = (
+  <svg viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.4-7 10-7 10z" />
+  </svg>
+);
+
+const FILTER_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+    <path d="M4 8h9M17 8h3M4 16h3M11 16h9" />
+    <circle cx="15" cy="8" r="2" />
+    <circle cx="9" cy="16" r="2" />
+  </svg>
+);
+const SORT_ICON = (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M8 4v16M4 16l4 4 4-4M16 20V4M12 8l4-4 4 4" />
+  </svg>
+);
 
 export default function Catalog({ products, lang }: { products: Product[]; lang: Lang }) {
   const t = T[lang];
-  const [cat, setCat] = useState<string>("Все");
+  const { cat, setCat, fOpen, setFOpen, favOnly, setFavOnly, fav, toggleFav, focusQ } = useStore();
   const [cond, setCond] = useState<Cond>("all");
   const [onlyStock, setOnlyStock] = useState(false);
   const [q, setQ] = useState("");
+  const [sort, setSort] = useState<Sort>("def");
+  const qRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (focusQ > 0) qRef.current?.focus();
+  }, [focusQ]);
 
   const list = useMemo(() => {
     const s = q.trim().toLowerCase();
-    return products.filter(
+    const res = products.filter(
       (p) =>
         (cat === "Все" || p.category === cat) &&
         (cond === "all" || p.condition === cond) &&
         (!onlyStock || p.in_stock) &&
+        (!favOnly || fav.includes(p.id)) &&
         (!s || (pName(p, lang) + " " + (pDesc(p, lang) ?? "")).toLowerCase().includes(s)),
     );
-  }, [products, cat, cond, onlyStock, q, lang]);
+    if (sort === "asc") res.sort((a, b) => a.price - b.price);
+    if (sort === "desc") res.sort((a, b) => b.price - a.price);
+    return res;
+  }, [products, cat, cond, onlyStock, q, lang, sort, favOnly, fav]);
+
+  const nAct = (cond !== "all" ? 1 : 0) + (onlyStock ? 1 : 0) + (favOnly ? 1 : 0) + (q.trim() ? 1 : 0);
 
   return (
     <>
-      <div className="tools">
-        <div className="cats">
-          {["Все", ...CATEGORIES].map((c) => (
-            <button key={c} className="cat" aria-pressed={cat === c} onClick={() => setCat(c)}>
-              {c === "Все" ? t.all : t.cats[c]}
-            </button>
-          ))}
-        </div>
-        <div className="tools-r">
-          <input
-            className="search"
-            type="search"
-            placeholder={t.search}
-            aria-label={t.search}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-          />
-          <div className="tog">
-            <button type="button" role="switch" aria-checked={onlyStock} aria-label={t.onlyStock} onClick={() => setOnlyStock(!onlyStock)} />
-            <span>{t.onlyStock}</span>
-          </div>
+      <div className="chips">
+        {["Все", ...CATEGORIES].map((c) => (
+          <button key={c} className="cat" aria-pressed={cat === c} onClick={() => setCat(c)}>
+            {c === "Все" ? t.all : t.cats[c]}
+          </button>
+        ))}
+      </div>
+      <div className="bar2">
+        <div className="count">{t.found(list.length)}</div>
+        <div className="pills">
+          <button type="button" className="pill" aria-expanded={fOpen} onClick={() => setFOpen(!fOpen)}>
+            {FILTER_ICON}
+            <span>
+              {t.filt}
+              {nAct ? ` (${nAct})` : ""}
+            </span>
+          </button>
+          <label className="pill">
+            {SORT_ICON}
+            <select className="srt" aria-label={t.sort} value={sort} onChange={(e) => setSort(e.target.value as Sort)}>
+              <option value="def">{t.sDef}</option>
+              <option value="asc">{t.sAsc}</option>
+              <option value="desc">{t.sDesc}</option>
+            </select>
+          </label>
         </div>
       </div>
-      <div className="tools" style={{ borderTop: 0, paddingBlock: "0 4px" }}>
-        <div className="cats">
+      <div className={"fpanel" + (fOpen ? " open" : "")}>
+        <div className="chips" style={{ padding: 0 }}>
           {([["all", t.all], ["new", t.cNew], ["used", t.cUsed]] as [Cond, string][]).map(([k, label]) => (
             <button key={k} className="cat" aria-pressed={cond === k} onClick={() => setCond(k)}>
               {label}
             </button>
           ))}
         </div>
+        <input ref={qRef} className="search" type="search" placeholder={t.search} aria-label={t.search} value={q} onChange={(e) => setQ(e.target.value)} />
+        <button type="button" className="favb" aria-pressed={favOnly} onClick={() => setFavOnly(!favOnly)}>
+          {HEART}
+          <span>
+            {t.favs}
+            {fav.length ? ` (${fav.length})` : ""}
+          </span>
+        </button>
+        <div className="tog">
+          <button type="button" role="switch" aria-checked={onlyStock} aria-label={t.onlyStock} onClick={() => setOnlyStock(!onlyStock)} />
+          <span>{t.onlyStock}</span>
+        </div>
       </div>
-      <div className="count">{t.found(list.length)}</div>
       <div className="grid">
         {list.length === 0 && <div className="empty">{products.length === 0 ? t.emptyNone : t.emptyFilter}</div>}
-        {list.map((p, i) => (
-          <Link
-            key={p.id}
-            href={`${prefix(lang)}/product/${p.id}`}
-            className={"card" + (p.in_stock ? "" : " sold")}
-            style={{ ["--i" as string]: Math.min(i, 12) }}
-          >
-            <Photo p={p} lang={lang} />
-            <div className="info">
-              <span className="c">{t.cats[p.category] ?? p.category}</span>
-              <span className="n">{pName(p, lang)}</span>
-              <span className="p">
-                {money(p.price)}
-                {p.in_stock && <span className="dot">{t.inStock}</span>}
-                {p.category === SET_CATEGORY && <span className="sep">{p.sold_separately ? t.sepYes : t.sepNo}</span>}
-              </span>
+        {list.map((p, i) => {
+          const on = fav.includes(p.id);
+          const used = p.condition === "used";
+          return (
+            <div key={p.id} className={"card" + (p.in_stock ? "" : " sold")} style={{ ["--i" as string]: Math.min(i, 12) }}>
+              <Link href={`${prefix(lang)}/product/${p.id}`} className="cardlink">
+                <Photo p={p} lang={lang} tags={false} />
+                <div className="info">
+                  <span className="lbl">{used ? t.cUsedTag : t.cNewTag}</span>
+                  <span className="n">{pName(p, lang)}</span>
+                  <span className="d">
+                    {p.category === SET_CATEGORY
+                      ? p.sold_separately
+                        ? t.sepYes
+                        : t.sepNo
+                      : [p.purity, p.weight != null ? `${p.weight} ${t.g}` : null].filter(Boolean).join(" · ")}
+                  </span>
+                  <span className="p">
+                    {money(p.price)}
+                    {p.in_stock && <span className="dot">{t.inStock}</span>}
+                  </span>
+                </div>
+              </Link>
+              <button type="button" className={"heart" + (on ? " on" : "")} aria-pressed={on} aria-label={t.favs} onClick={() => toggleFav(p.id)}>
+                {HEART}
+              </button>
             </div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
     </>
   );

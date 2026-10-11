@@ -61,7 +61,7 @@ export default async function ProductPage({ params }: Props) {
   const used = p.condition === "used";
   return (
     <>
-      <SiteHeader lang={lang} altPath={`/product/${p.id}`} logoUrl={settings.logo_url} name={shop.name} />
+      <SiteHeader lang={lang} altPath={`/product/${p.id}`} logoUrl={settings.logo_url} name={shop.name} address={SHOP.address} whatsapp={shop.whatsapp} />
       <div className="crumb">
         <Link href={prefix(lang) || "/"} className="link back">
           <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

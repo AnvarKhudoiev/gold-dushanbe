@@ -1,32 +1,16 @@
 import { T, type Lang } from "@/lib/i18n";
 import { SHOP, resolveShop } from "@/lib/config";
 import type { ShopSettings } from "@/lib/types";
-import { CoverArt } from "./Art";
 
 const svg = { fill: "none", stroke: "currentColor", strokeLinejoin: "round" as const, strokeLinecap: "round" as const };
 
-/** Вход на сайт: сначала фото магазина, затем блок «О магазине», затем каталог. */
+/** Блок «О магазине» под баннером; дальше идёт каталог. */
 export default function Cover({ lang, settings }: { lang: Lang; settings: ShopSettings }) {
   const t = T[lang];
   const shop = resolveShop(settings);
-  const heroUrl = settings.hero_url;
   const about = (lang === "tj" && settings.about_tj ? settings.about_tj : settings.about)?.trim() || t.heroSub;
   return (
     <>
-      <section className={"cover" + (heroUrl ? "" : " plain")}>
-        {heroUrl ? (
-          <div className="bg" style={{ backgroundImage: `url(${heroUrl})` }} />
-        ) : (
-          <div className="cart">
-            <CoverArt />
-          </div>
-        )}
-        <div className="cover-in">
-          <div className="eyebrow">{t.eyebrow}</div>
-          <h1>{shop.name}</h1>
-        </div>
-      </section>
-
       <section className="about">
         <div className="ab-main">
           <div className="eyebrow">{t.aboutTitle}</div>

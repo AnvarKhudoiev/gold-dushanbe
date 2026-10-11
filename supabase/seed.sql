@@ -22,3 +22,15 @@ update public.products set sold_separately = false, parts = '[
  {"name":"Кольцо","name_tj":"Ангуштарин","weight":3.8,"desc":"Гладкое обручальное кольцо, ширина 4 мм.","desc_tj":"Ангуштарини ҳамвор, паҳнӣ 4 мм."},
  {"name":"Серьги","name_tj":"Гӯшвор","weight":3.4,"desc":"Серьги-кольца небольшого диаметра в тон кольцу.","desc_tj":"Гӯшвори ҳалқагии хурд, ҳамранги ангуштарин."}
 ]'::jsonb where name = 'Свадебный комплект';
+
+-- Демо-фото (Unsplash, свободная лицензия). Продавец заменит их своими в админке.
+update public.products set image_url = 'https://images.unsplash.com/photo-1611955167811-4711904bb9f8?auto=format&fit=crop&w=800&q=70' where name = 'Кольцо с топазом' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?auto=format&fit=crop&w=800&q=70' where name = 'Кольцо-дорожка' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1708220040828-9ab1673681d3?auto=format&fit=crop&w=800&q=70' where name = 'Серьги-капли' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1653227907864-560dce4c252d?auto=format&fit=crop&w=800&q=70' where name = 'Серьги с рубином' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1611107683227-e9060eccd846?auto=format&fit=crop&w=800&q=70' where name = 'Цепочка «Бисмарк»' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1651160670627-2896ddf7822f?auto=format&fit=crop&w=800&q=70' where name = 'Цепочка «Якорь»' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?auto=format&fit=crop&w=800&q=70' where name = 'Браслет «Панцирь»' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1685970731194-e27b477e87ba?auto=format&fit=crop&w=800&q=70' where name = 'Подвеска-сердце' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1722410180687-b05b50922362?auto=format&fit=crop&w=800&q=70' where name = 'Комплект «Классика»' and image_url is null;
+update public.products set image_url = 'https://images.unsplash.com/photo-1628926379972-9843ad139a8c?auto=format&fit=crop&w=800&q=70' where name = 'Свадебный комплект' and image_url is null;

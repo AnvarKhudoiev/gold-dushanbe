@@ -4,6 +4,7 @@ import { SHOP, resolveShop } from "@/lib/config";
 import { fetchSettings } from "@/lib/supabase";
 import { T, htmlLang, isLang } from "@/lib/i18n";
 import { ArtDefs } from "@/components/Art";
+import { StoreProvider } from "@/components/StoreContext";
 import { DEMO_DOCK } from "@/lib/config";
 
 type Props = { children: React.ReactNode; params: Promise<{ lang: string }> };
@@ -42,12 +43,14 @@ export default async function SiteLayout({ children, params }: Props) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Onest:wght@400;500;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600&display=swap"
         />
       </head>
       <body className={DEMO_DOCK ? "withdock" : undefined}>
         <ArtDefs />
-        <div className="wrap">{children}</div>
+        <div className="wrap">
+          <StoreProvider>{children}</StoreProvider>
+        </div>
       </body>
     </html>
   );

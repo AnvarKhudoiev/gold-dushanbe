@@ -54,6 +54,16 @@ type Dict = {
   heroSub: string;
   cta: string;
   call: string;
+  catTitle: string;
+  filt: string;
+  home: string;
+  menu: string;
+  annMid: string;
+  sort: string;
+  sDef: string;
+  sAsc: string;
+  sDesc: string;
+  favs: string;
   cNew: string;
   cUsed: string;
   cNewTag: string;
@@ -109,6 +119,16 @@ const ru: Dict = {
   heroSub: "Актуальное наличие, цены и вес. Выберите украшение и напишите нам в WhatsApp.",
   cta: "Смотреть коллекцию",
   call: "Позвонить",
+  catTitle: "Каталог",
+  filt: "Фильтры",
+  home: "Главная",
+  menu: "Меню",
+  annMid: "Актуальное наличие · заказ в WhatsApp",
+  sort: "Сортировка",
+  sDef: "По умолчанию",
+  sAsc: "Цена: по возрастанию",
+  sDesc: "Цена: по убыванию",
+  favs: "Избранное",
   cNew: "Новые",
   cUsed: "Б/у · выкуплено",
   cNewTag: "Новинка",
@@ -164,6 +184,16 @@ const tj: Dict = {
   heroSub: "Мавҷудияти ҳозира, нарх ва вазн. Маснуотро интихоб кунед ва дар WhatsApp нависед.",
   cta: "Дидани коллексия",
   call: "Занг задан",
+  catTitle: "Каталог",
+  filt: "Филтрҳо",
+  home: "Асосӣ",
+  menu: "Феҳрист",
+  annMid: "Мавҷудияти ҳозира · фармоиш дар WhatsApp",
+  sort: "Мураттабсозӣ",
+  sDef: "Одатӣ",
+  sAsc: "Нарх: аз арзон",
+  sDesc: "Нарх: аз гарон",
+  favs: "Писандидаҳо",
   cNew: "Нав",
   cUsed: "Истифодашуда · харидорӣ",
   cNewTag: "Нав",
