@@ -1,0 +1,19 @@
+export const SHOP = {
+  name: process.env.NEXT_PUBLIC_SHOP_NAME || "gold.dushanbe",
+  tagline: process.env.NEXT_PUBLIC_SHOP_TAGLINE || "Золото 585 и 750 · Душанбе",
+  whatsapp: (process.env.NEXT_PUBLIC_WHATSAPP || "").replace(/\D/g, ""),
+  telegram: (process.env.NEXT_PUBLIC_TELEGRAM || "").replace(/^@/, ""),
+  address: process.env.NEXT_PUBLIC_ADDRESS || "Душанбе",
+  siteUrl: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
+};
+
+export const CATEGORIES = ["Кольца", "Серьги", "Цепочки", "Браслеты", "Подвески"] as const;
+export const PURITIES = ["375", "500", "585", "750", "875", "925", "999"] as const;
+
+export function money(n: number): string {
+  return Number(n).toLocaleString("ru-RU") + " с";
+}
+
+export function whatsappLink(text: string): string {
+  return `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent(text)}`;
+}

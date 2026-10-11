@@ -1,0 +1,72 @@
+# gold.dushanbe
+
+Витрина ювелирного магазина: покупатель видит товары и наличие, продавец сам добавляет, меняет и убирает товары в `/admin`. Заказ идёт через кнопку «Написать в WhatsApp».
+
+Стек: Next.js (App Router, TypeScript) + Supabase (база, фото, вход продавца).
+
+## 1. Supabase (10 минут)
+
+1. Создай проект на supabase.com.
+2. SQL Editor → вставь весь файл `supabase/schema.sql` → Run. Это создаст таблицу `products`, правила доступа и хранилище фото `products`.
+   Если базу ты создал раньше (до таджикской версии), выполни только `supabase/migration-tj.sql`: он добавит поля для таджикского текста.
+3. (Необязательно) Хочешь сразу увидеть витрину с примерами: SQL Editor → вставь `supabase/seed.sql` → Run. Позже удалишь их в `/admin`.
+4. Authentication → Users → Add user: почта и пароль продавца (поставь галочку Auto Confirm).
+5. Authentication → Sign In / Providers → **выключи регистрацию новых пользователей** (Allow new users to sign up = off). Это важно: менять товары может любой вошедший пользователь, поэтому других пользователей быть не должно.
+6. Project Settings → API: скопируй Project URL и anon/publishable key.
+
+## 2. Запуск у себя
+
+```bash
+cp .env.example .env.local   # заполни значения
+npm install
+npm run dev                  # http://localhost:3000
+```
+
+Админка: `http://localhost:3000/admin` (вход по почте и паролю из шага 4).
+
+## 3. Настройки (.env.local / переменные хостинга)
+
+| Переменная | Что это |
+|---|---|
+| NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (или ANON_KEY) | из Supabase |
+| NEXT_PUBLIC_SITE_URL | адрес сайта, например https://golddushanbe.com |
+| NEXT_PUBLIC_WHATSAPP | номер с кодом страны, только цифры (992XXXXXXXXX) |
+| NEXT_PUBLIC_TELEGRAM, NEXT_PUBLIC_ADDRESS | необязательно |
+| NEXT_PUBLIC_SHOP_NAME, NEXT_PUBLIC_SHOP_TAGLINE, NEXT_PUBLIC_SHOP_TAGLINE_TJ | название и подзаголовок (рус. и тадж.) |
+
+Переменные `NEXT_PUBLIC_*` вшиваются при сборке: после изменения нужно пересобрать (redeploy).
+
+## 4. Выкладка в интернет
+
+1. Залей папку в репозиторий GitHub.
+2. Подключи репозиторий к хостингу с поддержкой Next.js (Netlify, Vercel, Cloudflare). Для коммерческого сайта проверь условия бесплатного тарифа: у Vercel Hobby он только для некоммерческих проектов.
+3. Добавь переменные из таблицы выше в настройках хостинга и запусти деплой.
+4. Купи домен и привяжи его в настройках хостинга (DNS), https включится сам.
+
+## 5. Google
+
+1. search.google.com/search-console → добавь сайт → подтверди домен.
+2. Отправь `https://твой-домен/sitemap.xml` (генерируется сам из товаров).
+3. Заведи Google Business Profile магазина со ссылкой на сайт.
+4. На страницах уже есть title, description и разметка schema.org (товар, цена, наличие).
+
+## Языки
+
+Русский: `/`, таджикский: `/tj` (переключатель RU / TJ в шапке). Интерфейс переведён, названия и описания товаров продавец вводит в админке отдельно (поля «на таджикском» необязательны: если пусты, показывается русский текст). Для Google у каждой версии свой адрес и hreflang.
+
+## Лого
+
+Лого лежит в `public/logo.svg` и `public/icon.svg` (значок во вкладке), а в шапке рисуется компонентом `src/components/Logo.tsx`. Чтобы поставить своё, замени эти файлы и содержимое `Logo.tsx`.
+
+## Структура
+
+- `src/app/(site)/[lang]/page.tsx` — каталог (ru и tj)
+- `src/app/(site)/[lang]/product/[id]/page.tsx` — страница товара + кнопка WhatsApp
+- `src/app/(admin)/admin/page.tsx` — панель продавца (вход, товары, наличие, фото)
+- `src/lib/i18n.ts` — все тексты на русском и таджикском
+- `src/app/sitemap.ts`, `robots.ts` — для Google
+- `supabase/schema.sql` — база и права доступа
+
+## Что можно добавить позже
+
+Несколько фото на товар, статистика просмотров, язык (тадж./англ.), несколько продавцов (потребуется `shop_id` и правила доступа по нему).
