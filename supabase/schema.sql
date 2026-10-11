@@ -12,7 +12,10 @@ create table if not exists public.products (
   description_tj text,
   in_stock boolean not null default true,
   image_url text,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  condition text not null default 'new' check (condition in ('new','used')),
+  parts jsonb,
+  sold_separately boolean not null default true
 );
 
 create index if not exists products_created_idx on public.products (created_at desc);
@@ -36,6 +39,21 @@ create policy "seller updates" on public.products
 drop policy if exists "seller deletes" on public.products;
 create policy "seller deletes" on public.products
   for delete to authenticated using (true);
+
+-- Настройки оформления: логотип и главное фото (одна строка id = 1)
+create table if not exists public.shop_settings (
+  id int primary key default 1 check (id = 1),
+  logo_url text,
+  hero_url text
+);
+insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
+alter table public.shop_settings enable row level security;
+drop policy if exists "settings are public" on public.shop_settings;
+create policy "settings are public" on public.shop_settings for select using (true);
+drop policy if exists "seller inserts settings" on public.shop_settings;
+create policy "seller inserts settings" on public.shop_settings for insert to authenticated with check (true);
+drop policy if exists "seller updates settings" on public.shop_settings;
+create policy "seller updates settings" on public.shop_settings for update to authenticated using (true) with check (true);
 
 -- Хранилище фото (публичное чтение, запись только продавцу)
 insert into storage.buckets (id, name, public)

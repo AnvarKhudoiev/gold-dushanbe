@@ -7,7 +7,9 @@ export const SHOP = {
   siteUrl: (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, ""),
 };
 
-export const CATEGORIES = ["Кольца", "Серьги", "Цепочки", "Браслеты", "Подвески"] as const;
+export const CATEGORIES = ["Кольца", "Серьги", "Цепочки", "Браслеты", "Подвески", "Комплекты"] as const;
+export const SET_CATEGORY = "Комплекты";
+export const DEMO_DOCK = process.env.NEXT_PUBLIC_DEMO_DOCK === "1";
 export const PURITIES = ["375", "500", "585", "750", "875", "925", "999"] as const;
 
 export function money(n: number): string {

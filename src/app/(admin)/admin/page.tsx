@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { getBrowserClient } from "@/lib/supabase";
-import { CATEGORIES, PURITIES, SHOP, money } from "@/lib/config";
-import type { Product } from "@/lib/types";
+import { getBrowserClient, normalize } from "@/lib/supabase";
+import { CATEGORIES, PURITIES, SET_CATEGORY, SHOP, money } from "@/lib/config";
+import type { Product, SetItem, ShopSettings } from "@/lib/types";
 import Art from "@/components/Art";
+import Dock from "@/components/Dock";
+import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
+
+type ItemDraft = { name: string; name_tj: string; weight: string; desc: string; desc_tj: string };
 
 type Draft = {
   id?: string;
@@ -20,37 +25,50 @@ type Draft = {
   description: string;
   in_stock: boolean;
   image_url: string | null;
+  condition: "new" | "used";
+  sold_separately: boolean;
+  parts: ItemDraft[];
 };
 
 const EMPTY: Draft = {
   name: "", name_tj: "", description_tj: "", category: CATEGORIES[0], price: "", weight: "", purity: "585",
-  description: "", in_stock: true, image_url: null,
+  description: "", in_stock: true, image_url: null, condition: "new", sold_separately: true, parts: [],
 };
 
-/** Сжимает фото до 1000 px по длинной стороне, JPEG 80%. */
-function compress(file: File): Promise<Blob> {
+const EMPTY_ITEM: ItemDraft = { name: "", name_tj: "", weight: "", desc: "", desc_tj: "" };
+
+const ARROW = (
+  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M15 6H1M6 1L1 6l5 5" />
+  </svg>
+);
+
+/** Сжимает картинку до max px по длинной стороне. PNG сохраняет прозрачность (для логотипа). */
+function compress(file: File, max: number, type: "image/jpeg" | "image/png", quality = 0.8): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const k = Math.min(1, 1000 / Math.max(img.width, img.height));
+      const k = Math.min(1, max / Math.max(img.width, img.height));
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * k);
       c.height = Math.round(img.height * k);
       c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      c.toBlob((b) => (b ? resolve(b) : reject(new Error("compress"))), "image/jpeg", 0.8);
+      c.toBlob((b) => (b ? resolve(b) : reject(new Error("compress"))), type, quality);
     };
     img.onerror = () => reject(new Error("image"));
     img.src = url;
   });
 }
 
-function Switch({ on, onClick, label }: { on: boolean; onClick: () => void; label: string }) {
+function Switch({ on, onClick, label, onText = "В наличии", offText = "Нет в наличии" }: {
+  on: boolean; onClick: () => void; label: string; onText?: string; offText?: string;
+}) {
   return (
     <button type="button" className="sw" role="switch" aria-checked={on} aria-label={label} onClick={onClick}>
       <i />
-      <span>{on ? "В наличии" : "Нет в наличии"}</span>
+      <span style={{ minWidth: 150 }}>{on ? onText : offText}</span>
     </button>
   );
 }
@@ -63,6 +81,7 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [loginErr, setLoginErr] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [settings, setSettings] = useState<ShopSettings>({ logo_url: null, hero_url: null });
   const [draft, setDraft] = useState<Draft | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -78,7 +97,9 @@ export default function Admin() {
   const load = useCallback(async () => {
     const { data, error } = await sb.from("products").select("*").order("created_at", { ascending: false });
     if (error) say("Ошибка загрузки: " + error.message);
-    else setProducts((data ?? []) as Product[]);
+    else setProducts((data ?? []).map(normalize));
+    const st = await sb.from("shop_settings").select("*").eq("id", 1).maybeSingle();
+    if (st.data) setSettings({ logo_url: st.data.logo_url ?? null, hero_url: st.data.hero_url ?? null });
   }, [sb]);
 
   useEffect(() => {
@@ -108,13 +129,15 @@ export default function Admin() {
     say(p.in_stock ? "Отмечено: нет в наличии" : "Отмечено: в наличии");
   }
 
+  async function removeFile(url: string | null) {
+    const path = url?.split("/products/")[1];
+    if (path) await sb.storage.from("products").remove([decodeURIComponent(path)]);
+  }
+
   async function remove(p: Product) {
     const { error } = await sb.from("products").delete().eq("id", p.id);
     if (error) return say("Ошибка: " + error.message);
-    if (p.image_url) {
-      const path = p.image_url.split("/products/")[1];
-      if (path) await sb.storage.from("products").remove([decodeURIComponent(path)]);
-    }
+    await removeFile(p.image_url);
     setConfirmDel(null);
     setProducts((l) => l.filter((x) => x.id !== p.id));
     say("Товар удалён");
@@ -129,8 +152,13 @@ export default function Admin() {
             id: p.id, name: p.name, name_tj: p.name_tj ?? "", description_tj: p.description_tj ?? "", category: p.category, price: String(p.price),
             weight: p.weight == null ? "" : String(p.weight), purity: p.purity ?? "585",
             description: p.description ?? "", in_stock: p.in_stock, image_url: p.image_url,
+            condition: p.condition, sold_separately: p.sold_separately,
+            parts: (p.parts ?? []).map((it) => ({
+              name: it.name ?? "", name_tj: it.name_tj ?? "", weight: it.weight == null ? "" : String(it.weight),
+              desc: it.desc ?? "", desc_tj: it.desc_tj ?? "",
+            })),
           }
-        : { ...EMPTY },
+        : { ...EMPTY, parts: [] },
     );
     window.scrollTo(0, 0);
   }
@@ -141,6 +169,13 @@ export default function Admin() {
     setPreview(URL.createObjectURL(f));
   }
 
+  async function upload(blob: Blob, prefix: string, ext: "jpg" | "png", contentType: string) {
+    const path = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const up = await sb.storage.from("products").upload(path, blob, { contentType });
+    if (up.error) throw up.error;
+    return sb.storage.from("products").getPublicUrl(path).data.publicUrl;
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!draft) return;
@@ -148,12 +183,22 @@ export default function Admin() {
     try {
       let image_url = draft.image_url;
       if (file) {
-        const blob = await compress(file);
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-        const up = await sb.storage.from("products").upload(path, blob, { contentType: "image/jpeg" });
-        if (up.error) throw up.error;
-        image_url = sb.storage.from("products").getPublicUrl(path).data.publicUrl;
+        const blob = await compress(file, 1000, "image/jpeg");
+        image_url = await upload(blob, "p", "jpg", "image/jpeg");
+        if (draft.image_url) await removeFile(draft.image_url);
       }
+      const isSet = draft.category === SET_CATEGORY;
+      const parts: SetItem[] | null = isSet
+        ? draft.parts
+            .filter((it) => it.name.trim())
+            .map((it) => ({
+              name: it.name.trim(),
+              name_tj: it.name_tj.trim() || null,
+              weight: it.weight === "" ? null : Number(it.weight),
+              desc: it.desc.trim() || null,
+              desc_tj: it.desc_tj.trim() || null,
+            }))
+        : null;
       const row = {
         name: draft.name.trim(),
         name_tj: draft.name_tj.trim() || null,
@@ -165,6 +210,9 @@ export default function Admin() {
         description: draft.description.trim() || null,
         in_stock: draft.in_stock,
         image_url,
+        condition: draft.condition,
+        sold_separately: isSet ? draft.sold_separately : true,
+        parts,
       };
       const res = draft.id
         ? await sb.from("products").update(row).eq("id", draft.id)
@@ -180,118 +228,261 @@ export default function Admin() {
     }
   }
 
+  /** Логотип или главное фото: загрузка и сброс. */
+  async function setImage(kind: "logo" | "hero", f: File | undefined) {
+    if (!f) return;
+    try {
+      const old = kind === "logo" ? settings.logo_url : settings.hero_url;
+      const blob = kind === "logo" ? await compress(f, 256, "image/png") : await compress(f, 1600, "image/jpeg", 0.78);
+      const url = await upload(blob, kind, kind === "logo" ? "png" : "jpg", kind === "logo" ? "image/png" : "image/jpeg");
+      const next = { ...settings, [kind === "logo" ? "logo_url" : "hero_url"]: url };
+      const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
+      if (res.error) throw res.error;
+      await removeFile(old);
+      setSettings(next);
+      say(kind === "logo" ? "Логотип обновлён" : "Главное фото обновлено");
+    } catch (err) {
+      say("Ошибка: " + (err instanceof Error ? err.message : "не удалось загрузить") + " (выполнен ли migration-v2.sql?)");
+    }
+  }
+
+  async function resetImage(kind: "logo" | "hero") {
+    const old = kind === "logo" ? settings.logo_url : settings.hero_url;
+    const next = { ...settings, [kind === "logo" ? "logo_url" : "hero_url"]: null };
+    const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
+    if (res.error) return say("Ошибка: " + res.error.message);
+    await removeFile(old);
+    setSettings(next);
+    say(kind === "logo" ? "Логотип сброшен" : "Фото сброшено");
+  }
+
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => (d ? { ...d, [k]: v } : d));
+  const setItem = (i: number, k: keyof ItemDraft, v: string) =>
+    setDraft((d) => (d ? { ...d, parts: d.parts.map((it, j) => (j === i ? { ...it, [k]: v } : it)) } : d));
 
   if (!ready) return <p className="hint" style={{ padding: 24 }}>Загрузка…</p>;
 
   if (!session)
     return (
-      <form className="lock box" onSubmit={login}>
-        <h2 style={{ fontFamily: "var(--display)", fontWeight: 400, margin: 0 }}>Вход для продавца</h2>
-        <input type="email" placeholder="Почта" aria-label="Почта" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="Пароль" aria-label="Пароль" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button className="btn" type="submit">Войти</button>
-        {loginErr && <div className="err">{loginErr}</div>}
-        <Link href="/" className="hint">← На витрину</Link>
-      </form>
+      <>
+        <form className="lock box" onSubmit={login}>
+          <h2>Вход для продавца</h2>
+          <input type="email" placeholder="Почта" aria-label="Почта" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <input type="password" placeholder="Пароль" aria-label="Пароль" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <button className="btn" type="submit">Войти</button>
+          {loginErr && <div className="err">{loginErr}</div>}
+          <Link href="/" className="link back">{ARROW}<span>Витрина</span></Link>
+        </form>
+        <Dock current="admin" />
+      </>
     );
 
-  return (
-    <div className="panel">
-      <div className="bar">
-        <h2>Товары — {SHOP.name}</h2>
-        <div className="acts">
-          <button className="btn" onClick={() => startEdit()}>Добавить товар</button>
-          <Link className="btn ghost" href="/">На витрину</Link>
-          <button className="btn ghost" onClick={() => sb.auth.signOut()}>Выйти</button>
-        </div>
-      </div>
+  const isSet = draft?.category === SET_CATEGORY;
 
-      {draft && (
+  return (
+    <>
+      <header className="top">
+        <Link href="/" className="brand">
+          <Logo url={settings.logo_url} />
+          <div style={{ minWidth: 0 }}>
+            <span className="nm">{SHOP.name}</span>
+            <p>Панель продавца</p>
+          </div>
+        </Link>
+        <div className="hdr-r">
+          <button className="link" onClick={() => sb.auth.signOut()}>Выйти</button>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <div className="panel">
+        <Link href="/" className="link back" style={{ justifySelf: "start" }}>{ARROW}<span>Витрина</span></Link>
+        <div className="bar">
+          <h2>Товары</h2>
+          <button className="btn" onClick={() => startEdit()}>Добавить товар</button>
+        </div>
+
+        {draft && (
+          <div className="box">
+            <form className="f" onSubmit={save}>
+              <button type="button" className="link back bk" onClick={() => setDraft(null)}>{ARROW}<span>К списку товаров</span></button>
+              <div className="fld wide">
+                <label>Фото</label>
+                <div className="bar" style={{ justifyContent: "flex-start", gap: 16 }}>
+                  <div className="pv">
+                    {preview || draft.image_url ? <img src={preview ?? draft.image_url ?? ""} alt="" /> : <Art category={draft.category} />}
+                  </div>
+                  <div>
+                    <input type="file" accept="image/*" onChange={(e) => pick(e.target.files?.[0])} />
+                    <div className="hint" style={{ marginTop: 6 }}>Фото сожмётся автоматически.</div>
+                  </div>
+                </div>
+              </div>
+              <div className="fld wide">
+                <label htmlFor="fn">Название</label>
+                <input id="fn" required value={draft.name} onChange={(e) => set("name", e.target.value)} />
+              </div>
+              <div className="fld">
+                <label htmlFor="fc">Категория</label>
+                <select id="fc" value={draft.category} onChange={(e) => set("category", e.target.value)}>
+                  {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="fld">
+                <label htmlFor="fcd">Состояние</label>
+                <select id="fcd" value={draft.condition} onChange={(e) => set("condition", e.target.value as "new" | "used")}>
+                  <option value="new">Новое</option>
+                  <option value="used">Б/у (выкуплено у клиента)</option>
+                </select>
+              </div>
+              <div className="fld">
+                <label htmlFor="fp">Цена, сомони</label>
+                <input id="fp" type="number" min="0" step="any" required value={draft.price} onChange={(e) => set("price", e.target.value)} />
+              </div>
+              <div className="fld">
+                <label htmlFor="fw">Вес, г</label>
+                <input id="fw" type="number" min="0" step="0.01" value={draft.weight} onChange={(e) => set("weight", e.target.value)} />
+              </div>
+              <div className="fld">
+                <label htmlFor="fu">Проба</label>
+                <select id="fu" value={draft.purity} onChange={(e) => set("purity", e.target.value)}>
+                  {PURITIES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+
+              {isSet && (
+                <div className="fld wide">
+                  <label>Изделия в комплекте</label>
+                  {draft.parts.map((it, i) => (
+                    <div className="itm" key={i}>
+                      <div className="bar">
+                        <b>Изделие {i + 1}</b>
+                        <button type="button" className="link no" onClick={() => set("parts", draft.parts.filter((_, j) => j !== i))}>Убрать</button>
+                      </div>
+                      <div className="f" style={{ marginTop: 10 }}>
+                        <div className="fld">
+                          <label>Название</label>
+                          <input value={it.name} onChange={(e) => setItem(i, "name", e.target.value)} />
+                        </div>
+                        <div className="fld">
+                          <label>Вес, г</label>
+                          <input type="number" min="0" step="0.01" value={it.weight} onChange={(e) => setItem(i, "weight", e.target.value)} />
+                        </div>
+                        <div className="fld wide">
+                          <label>Описание</label>
+                          <textarea rows={2} value={it.desc} onChange={(e) => setItem(i, "desc", e.target.value)} />
+                        </div>
+                        <div className="fld">
+                          <label>Название (TJ, необязательно)</label>
+                          <input value={it.name_tj} onChange={(e) => setItem(i, "name_tj", e.target.value)} />
+                        </div>
+                        <div className="fld">
+                          <label>Описание (TJ, необязательно)</label>
+                          <input value={it.desc_tj} onChange={(e) => setItem(i, "desc_tj", e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div>
+                    <button type="button" className="btn ghost small" onClick={() => set("parts", [...draft.parts, { ...EMPTY_ITEM }])}>
+                      Добавить изделие в комплект
+                    </button>
+                  </div>
+                  <Switch
+                    on={draft.sold_separately}
+                    onClick={() => set("sold_separately", !draft.sold_separately)}
+                    label="Продажа по отдельности"
+                    onText="Можно продать по отдельности"
+                    offText="Только комплектом"
+                  />
+                </div>
+              )}
+
+              <div className="fld wide">
+                <label htmlFor="fd">Описание</label>
+                <textarea id="fd" rows={3} value={draft.description} onChange={(e) => set("description", e.target.value)} />
+              </div>
+              <div className="fld wide">
+                <label htmlFor="fnt">Название на таджикском (необязательно)</label>
+                <input id="fnt" value={draft.name_tj} onChange={(e) => set("name_tj", e.target.value)} />
+              </div>
+              <div className="fld wide">
+                <label htmlFor="fdt">Описание на таджикском (необязательно)</label>
+                <textarea id="fdt" rows={3} value={draft.description_tj} onChange={(e) => set("description_tj", e.target.value)} />
+                <span className="hint">Если не заполнить, на таджикской версии покажется русский текст.</span>
+              </div>
+              <div className="fld wide bar" style={{ display: "flex" }}>
+                <Switch on={draft.in_stock} onClick={() => set("in_stock", !draft.in_stock)} label="Наличие" />
+                <div className="acts">
+                  <button className="btn ghost" type="button" onClick={() => setDraft(null)}>Отмена</button>
+                  <button className="btn" type="submit" disabled={busy}>{busy ? "Сохраняю…" : "Сохранить"}</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+
+        <div className="rows">
+          {products.length === 0 && <p className="hint" style={{ padding: "14px 0" }}>Товаров пока нет. Нажмите «Добавить товар».</p>}
+          {products.map((p) => (
+            <div className="row" key={p.id}>
+              <div className="th">{p.image_url ? <img src={p.image_url} alt="" /> : <Art category={p.category} />}</div>
+              <div className="t">
+                <b>{p.name}</b>
+                <span>{p.category} · {p.condition === "used" ? "Б/у" : "Новое"} · {money(p.price)}</span>
+              </div>
+              <div className="acts">
+                <Switch on={p.in_stock} onClick={() => toggle(p)} label={`Наличие: ${p.name}`} />
+                <button className="link" onClick={() => startEdit(p)}>Изменить</button>
+                {confirmDel === p.id ? (
+                  <button className="btn danger small" onClick={() => remove(p)}>Точно удалить</button>
+                ) : (
+                  <button className="link no" onClick={() => setConfirmDel(p.id)}>Удалить</button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div className="box">
-          <form className="f" onSubmit={save}>
-            <div className="fld wide">
-              <label>Фото</label>
-              <div className="bar" style={{ justifyContent: "flex-start", gap: 14 }}>
-                <div className="pv">
-                  {preview || draft.image_url ? <img src={preview ?? draft.image_url ?? ""} alt="" /> : <Art category={draft.category} />}
+          <h4>Оформление магазина</h4>
+          <div className="f">
+            <div className="fld">
+              <label>Логотип</label>
+              <div className="bar" style={{ justifyContent: "flex-start", gap: 16 }}>
+                <div className="pv" style={{ width: 64, aspectRatio: "1" }}>
+                  {settings.logo_url ? <img src={settings.logo_url} alt="" style={{ objectFit: "contain" }} /> : <span className="hint">по умолч.</span>}
                 </div>
                 <div>
-                  <input type="file" accept="image/*" onChange={(e) => pick(e.target.files?.[0])} />
-                  <div className="hint">Фото сожмётся автоматически.</div>
+                  <input type="file" accept="image/*" onChange={(e) => setImage("logo", e.target.files?.[0])} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="link no" onClick={() => resetImage("logo")}>Сбросить</button>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="fld wide">
-              <label htmlFor="fn">Название</label>
-              <input id="fn" required value={draft.name} onChange={(e) => set("name", e.target.value)} />
-            </div>
             <div className="fld">
-              <label htmlFor="fc">Категория</label>
-              <select id="fc" value={draft.category} onChange={(e) => set("category", e.target.value)}>
-                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="fld">
-              <label htmlFor="fp">Цена, сомони</label>
-              <input id="fp" type="number" min="0" step="any" required value={draft.price} onChange={(e) => set("price", e.target.value)} />
-            </div>
-            <div className="fld">
-              <label htmlFor="fw">Вес, г</label>
-              <input id="fw" type="number" min="0" step="0.01" value={draft.weight} onChange={(e) => set("weight", e.target.value)} />
-            </div>
-            <div className="fld">
-              <label htmlFor="fu">Проба</label>
-              <select id="fu" value={draft.purity} onChange={(e) => set("purity", e.target.value)}>
-                {PURITIES.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div className="fld wide">
-              <label htmlFor="fd">Описание</label>
-              <textarea id="fd" rows={3} value={draft.description} onChange={(e) => set("description", e.target.value)} />
-            </div>
-            <div className="fld wide">
-              <label htmlFor="fnt">Название на таджикском (необязательно)</label>
-              <input id="fnt" value={draft.name_tj} onChange={(e) => set("name_tj", e.target.value)} />
-            </div>
-            <div className="fld wide">
-              <label htmlFor="fdt">Описание на таджикском (необязательно)</label>
-              <textarea id="fdt" rows={3} value={draft.description_tj} onChange={(e) => set("description_tj", e.target.value)} />
-              <span className="hint">Если не заполнить, на таджикской версии покажется русский текст.</span>
-            </div>
-            <div className="fld wide bar" style={{ display: "flex" }}>
-              <Switch on={draft.in_stock} onClick={() => set("in_stock", !draft.in_stock)} label="Наличие" />
-              <div className="acts">
-                <button className="btn ghost" type="button" onClick={() => setDraft(null)}>Отмена</button>
-                <button className="btn" type="submit" disabled={busy}>{busy ? "Сохраняю…" : "Сохранить"}</button>
+              <label>Главное фото (на входе)</label>
+              <div className="bar" style={{ justifyContent: "flex-start", gap: 16 }}>
+                <div className="pv" style={{ width: 140, aspectRatio: "16/10" }}>
+                  {settings.hero_url ? <img src={settings.hero_url} alt="" /> : <span className="hint">по умолчанию</span>}
+                </div>
+                <div>
+                  <input type="file" accept="image/*" onChange={(e) => setImage("hero", e.target.files?.[0])} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="link no" onClick={() => resetImage("hero")}>Сбросить</button>
+                  </div>
+                </div>
               </div>
             </div>
-          </form>
-        </div>
-      )}
-
-      <div className="rows">
-        {products.length === 0 && <p className="hint">Товаров пока нет. Нажмите «Добавить товар».</p>}
-        {products.map((p) => (
-          <div className="row" key={p.id}>
-            <div className="th">{p.image_url ? <img src={p.image_url} alt="" /> : <Art category={p.category} />}</div>
-            <div className="t">
-              <b>{p.name}</b>
-              <span>{p.category} · {money(p.price)}</span>
-            </div>
-            <div className="acts">
-              <Switch on={p.in_stock} onClick={() => toggle(p)} label={`Наличие: ${p.name}`} />
-              <button className="btn ghost small" onClick={() => startEdit(p)}>Изменить</button>
-              {confirmDel === p.id ? (
-                <button className="btn danger small" onClick={() => remove(p)}>Точно удалить</button>
-              ) : (
-                <button className="btn ghost small" onClick={() => setConfirmDel(p.id)}>Удалить</button>
-              )}
-            </div>
           </div>
-        ))}
+          <p className="hint" style={{ marginTop: 14 }}>
+            Название, адрес и WhatsApp магазина задаются в переменных окружения (Vercel → Settings → Environment Variables).
+          </p>
+        </div>
       </div>
       {toast && <div className="toast">{toast}</div>}
-    </div>
+      <Dock current="admin" />
+    </>
   );
 }

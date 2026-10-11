@@ -26,7 +26,7 @@ export async function fetchProducts() {
     console.error("fetchProducts:", error.message);
     return [];
   }
-  return (data ?? []) as import("./types").Product[];
+  return (data ?? []).map(normalize);
 }
 
 export async function fetchProduct(id: string) {
@@ -35,5 +35,23 @@ export async function fetchProduct(id: string) {
     console.error("fetchProduct:", error.message);
     return null;
   }
-  return (data ?? null) as import("./types").Product | null;
+  return data ? normalize(data) : null;
+}
+
+/** Подставляет значения по умолчанию, если миграция v2 ещё не выполнена. */
+export function normalize(row: Record<string, unknown>): import("./types").Product {
+  const r = row as unknown as import("./types").Product;
+  return {
+    ...r,
+    condition: r.condition === "used" ? "used" : "new",
+    parts: Array.isArray(r.parts) ? r.parts : null,
+    sold_separately: r.sold_separately !== false,
+  };
+}
+
+export async function fetchSettings(): Promise<import("./types").ShopSettings> {
+  const empty = { logo_url: null, hero_url: null };
+  const { data, error } = await getServerClient().from("shop_settings").select("*").eq("id", 1).maybeSingle();
+  if (error || !data) return empty;
+  return { logo_url: data.logo_url ?? null, hero_url: data.hero_url ?? null };
 }

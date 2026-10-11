@@ -1,3 +1,11 @@
+export type SetItem = {
+  name: string;
+  name_tj?: string | null;
+  weight?: number | string | null;
+  desc?: string | null;
+  desc_tj?: string | null;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -11,4 +19,15 @@ export type Product = {
   in_stock: boolean;
   image_url: string | null;
   created_at: string;
+  /** "new" — новое, "used" — б/у (выкуплено у клиента) */
+  condition: "new" | "used";
+  /** Состав комплекта (только для категории «Комплекты») */
+  parts: SetItem[] | null;
+  /** Можно ли купить части комплекта по отдельности */
+  sold_separately: boolean;
+};
+
+export type ShopSettings = {
+  logo_url: string | null;
+  hero_url: string | null;
 };

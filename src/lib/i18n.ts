@@ -49,6 +49,25 @@ type Dict = {
   siteDesc: string;
   productDesc: (p: Product) => string;
   langName: string;
+  eyebrow: string;
+  hero: string;
+  heroSub: string;
+  cta: string;
+  cNew: string;
+  cUsed: string;
+  cNewTag: string;
+  cUsedTag: string;
+  condLabel: string;
+  saleLabel: string;
+  sepYes: string;
+  sepNo: string;
+  inSet: string;
+  backShort: string;
+  themeDark: string;
+  themeLight: string;
+  dockShop: string;
+  dockAdmin: string;
+  note: string;
 };
 
 const ru: Dict = {
@@ -68,8 +87,8 @@ const ru: Dict = {
   g: "г",
   wa: "Написать в WhatsApp",
   waHint: "Откроется чат с готовым сообщением о товаре.",
-  back: "← Весь каталог",
-  cats: { Кольца: "Кольца", Серьги: "Серьги", Цепочки: "Цепочки", Браслеты: "Браслеты", Подвески: "Подвески" },
+  back: "Весь каталог",
+  cats: { Кольца: "Кольца", Серьги: "Серьги", Цепочки: "Цепочки", Браслеты: "Браслеты", Подвески: "Подвески", Комплекты: "Комплекты" },
   msg: (name, price, purity, weight, url) =>
     `Здравствуйте! Интересует: ${name} (${money(price)})${purity ? `, проба ${purity}` : ""}${weight ? `, ${weight} г` : ""}. Есть в наличии? ${url}`,
   siteTitle: `${SHOP.name} — ювелирные изделия в Душанбе`,
@@ -77,6 +96,25 @@ const ru: Dict = {
   productDesc: (p) =>
     `${p.name}, ${money(p.price)}${p.purity ? `, проба ${p.purity}` : ""}${p.weight ? `, ${p.weight} г` : ""}. ${p.in_stock ? "В наличии" : "Нет в наличии"}.`,
   langName: "RU",
+  eyebrow: "Коллекция · Душанбе",
+  hero: "Украшения из золота",
+  heroSub: "Актуальное наличие, цены и вес. Выберите украшение и напишите нам в WhatsApp.",
+  cta: "Смотреть коллекцию",
+  cNew: "Новые",
+  cUsed: "Б/у · выкуплено",
+  cNewTag: "Новинка",
+  cUsedTag: "Б/у",
+  condLabel: "Состояние",
+  saleLabel: "Продажа",
+  sepYes: "Можно по отдельности",
+  sepNo: "Только комплектом",
+  inSet: "Что в комплекте",
+  backShort: "Назад",
+  themeDark: "Тёмная тема",
+  themeLight: "Светлая тема",
+  dockShop: "Витрина",
+  dockAdmin: "Продавец",
+  note: "",
 };
 
 const tj: Dict = {
@@ -96,8 +134,8 @@ const tj: Dict = {
   g: "г",
   wa: "Дар WhatsApp нависед",
   waHint: "Чат бо паёми тайёр дар бораи маҳсулот кушода мешавад.",
-  back: "← Тамоми каталог",
-  cats: { Кольца: "Ангуштарин", Серьги: "Гӯшвор", Цепочки: "Занҷир", Браслеты: "Дастбанд", Подвески: "Овезон" },
+  back: "Тамоми каталог",
+  cats: { Кольца: "Ангуштарин", Серьги: "Гӯшвор", Цепочки: "Занҷир", Браслеты: "Дастбанд", Подвески: "Овезон", Комплекты: "Маҷмӯа" },
   msg: (name, price, purity, weight, url) =>
     `Салом! Ба ман ин маҳсулот писанд омад: ${name} (${money(price)})${purity ? `, проба ${purity}` : ""}${weight ? `, ${weight} г` : ""}. Оё мавҷуд аст? ${url}`,
   siteTitle: `${SHOP.name} — ҷавоҳирот дар Душанбе`,
@@ -105,6 +143,33 @@ const tj: Dict = {
   productDesc: (p) =>
     `${p.name_tj || p.name}, ${money(p.price)}${p.purity ? `, проба ${p.purity}` : ""}${p.weight ? `, ${p.weight} г` : ""}. ${p.in_stock ? "Мавҷуд аст" : "Мавҷуд нест"}.`,
   langName: "TJ",
+  eyebrow: "Коллексия · Душанбе",
+  hero: "Маснуоти тилло",
+  heroSub: "Мавҷудияти ҳозира, нарх ва вазн. Маснуотро интихоб кунед ва дар WhatsApp нависед.",
+  cta: "Дидани коллексия",
+  cNew: "Нав",
+  cUsed: "Истифодашуда · харидорӣ",
+  cNewTag: "Нав",
+  cUsedTag: "Истифодашуда",
+  condLabel: "Ҳолат",
+  saleLabel: "Фурӯш",
+  sepYes: "Ҷудо ҳам мумкин",
+  sepNo: "Танҳо маҷмӯъ",
+  inSet: "Дар маҷмӯа чӣ ҳаст",
+  backShort: "Бозгашт",
+  themeDark: "Мавзӯи торик",
+  themeLight: "Мавзӯи равшан",
+  dockShop: "Витрина",
+  dockAdmin: "Фурӯшанда",
+  note: "",
 };
 
 export const T: Record<Lang, Dict> = { ru, tj };
+
+export function itemName(it: import("./types").SetItem, lang: Lang): string {
+  return lang === "tj" && it.name_tj ? it.name_tj : it.name;
+}
+
+export function itemDesc(it: import("./types").SetItem, lang: Lang): string | null | undefined {
+  return lang === "tj" && it.desc_tj ? it.desc_tj : it.desc;
+}
