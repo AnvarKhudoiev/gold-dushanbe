@@ -15,6 +15,10 @@ create table if not exists public.shop_settings (
   hero_url text
 );
 insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
+alter table public.shop_settings add column if not exists about text;
+alter table public.shop_settings add column if not exists about_tj text;
+alter table public.shop_settings add column if not exists shop_name text;
+alter table public.shop_settings add column if not exists whatsapp text;
 alter table public.shop_settings enable row level security;
 
 drop policy if exists "settings are public" on public.shop_settings;

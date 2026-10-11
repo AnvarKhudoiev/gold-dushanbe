@@ -81,7 +81,11 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [loginErr, setLoginErr] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-  const [settings, setSettings] = useState<ShopSettings>({ logo_url: null, hero_url: null });
+  const [settings, setSettings] = useState<ShopSettings>({ logo_url: null, hero_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null });
+  const [nameIn, setNameIn] = useState("");
+  const [waIn, setWaIn] = useState("");
+  const [aboutRu, setAboutRu] = useState("");
+  const [aboutTj, setAboutTj] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -99,7 +103,13 @@ export default function Admin() {
     if (error) say("Ошибка загрузки: " + error.message);
     else setProducts((data ?? []).map(normalize));
     const st = await sb.from("shop_settings").select("*").eq("id", 1).maybeSingle();
-    if (st.data) setSettings({ logo_url: st.data.logo_url ?? null, hero_url: st.data.hero_url ?? null });
+    if (st.data) {
+      setSettings({ logo_url: st.data.logo_url ?? null, hero_url: st.data.hero_url ?? null, about: st.data.about ?? null, about_tj: st.data.about_tj ?? null, shop_name: st.data.shop_name ?? null, whatsapp: st.data.whatsapp ?? null });
+      setNameIn(st.data.shop_name ?? "");
+      setWaIn(st.data.whatsapp ?? "");
+      setAboutRu(st.data.about ?? "");
+      setAboutTj(st.data.about_tj ?? "");
+    }
   }, [sb]);
 
   useEffect(() => {
@@ -246,6 +256,20 @@ export default function Admin() {
     }
   }
 
+  async function saveShop() {
+    const next = {
+      ...settings,
+      shop_name: nameIn.trim() || null,
+      whatsapp: waIn.replace(/\D/g, "") || null,
+      about: aboutRu.trim() || null,
+      about_tj: aboutTj.trim() || null,
+    };
+    const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
+    if (res.error) return say("Ошибка: " + res.error.message + " (выполнен ли migration-v2.sql?)");
+    setSettings(next);
+    say("Данные сохранены");
+  }
+
   async function resetImage(kind: "logo" | "hero") {
     const old = kind === "logo" ? settings.logo_url : settings.hero_url;
     const next = { ...settings, [kind === "logo" ? "logo_url" : "hero_url"]: null };
@@ -285,7 +309,7 @@ export default function Admin() {
         <Link href="/" className="brand">
           <Logo url={settings.logo_url} />
           <div style={{ minWidth: 0 }}>
-            <span className="nm">{SHOP.name}</span>
+            <span className="nm">{settings.shop_name || SHOP.name}</span>
             <p>Панель продавца</p>
           </div>
         </Link>
@@ -445,7 +469,7 @@ export default function Admin() {
         </div>
 
         <div className="box">
-          <h4>Оформление магазина</h4>
+          <h4>Данные магазина</h4>
           <div className="f">
             <div className="fld">
               <label>Логотип</label>
@@ -476,8 +500,28 @@ export default function Admin() {
               </div>
             </div>
           </div>
+          <div className="f" style={{ marginTop: 16 }}>
+            <div className="fld">
+              <label htmlFor="sn">Название</label>
+              <input id="sn" value={nameIn} onChange={(e) => setNameIn(e.target.value)} placeholder={SHOP.name} />
+            </div>
+            <div className="fld">
+              <label htmlFor="sw">WhatsApp (с кодом страны)</label>
+              <input id="sw" inputMode="tel" value={waIn} onChange={(e) => setWaIn(e.target.value)} placeholder={SHOP.whatsapp || "992900000000"} />
+            </div>
+            <div className="fld wide">
+              <label htmlFor="abr">Описание магазина (под фото на входе)</label>
+              <textarea id="abr" rows={4} value={aboutRu} onChange={(e) => setAboutRu(e.target.value)} placeholder="Например: Семейный ювелирный магазин в Душанбе. Золото 585 и 750." />
+            </div>
+            <div className="fld wide">
+              <label htmlFor="abt">Описание на таджикском (необязательно)</label>
+              <textarea id="abt" rows={4} value={aboutTj} onChange={(e) => setAboutTj(e.target.value)} />
+              <span className="hint">Если пусто, на таджикской версии покажется русский текст. Если пусто везде, будет стандартный текст.</span>
+            </div>
+            <div><button type="button" className="btn" onClick={saveShop}>Сохранить данные</button></div>
+          </div>
           <p className="hint" style={{ marginTop: 14 }}>
-            Название, адрес и WhatsApp магазина задаются в переменных окружения (Vercel → Settings → Environment Variables).
+            Адрес магазина задаётся в переменных окружения (Vercel → Settings → Environment Variables → NEXT_PUBLIC_ADDRESS).
           </p>
         </div>
       </div>

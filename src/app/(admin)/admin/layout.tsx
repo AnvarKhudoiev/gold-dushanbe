@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "../../globals.css";
 import { ArtDefs } from "@/components/Art";
-import ThemeScript from "@/components/ThemeScript";
 import { DEMO_DOCK } from "@/lib/config";
 
 export const metadata: Metadata = {
@@ -14,7 +13,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <ThemeScript />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

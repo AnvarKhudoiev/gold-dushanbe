@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { fetchProduct, fetchSettings } from "@/lib/supabase";
-import { SET_CATEGORY, SHOP, money, whatsappLink } from "@/lib/config";
+import { SET_CATEGORY, SHOP, money, resolveShop, whatsappLink } from "@/lib/config";
 import { T, isLang, itemDesc, itemName, pDesc, pName, prefix } from "@/lib/i18n";
 import Photo from "@/components/Photo";
 import SiteHeader from "@/components/SiteHeader";
@@ -38,6 +38,7 @@ export default async function ProductPage({ params }: Props) {
   if (!p) notFound();
 
   const t = T[lang];
+  const shop = resolveShop(settings);
   const name = pName(p, lang);
   const desc = pDesc(p, lang);
   const url = `${SHOP.siteUrl}${prefix(lang)}/product/${p.id}`;
@@ -60,7 +61,7 @@ export default async function ProductPage({ params }: Props) {
   const used = p.condition === "used";
   return (
     <>
-      <SiteHeader lang={lang} altPath={`/product/${p.id}`} logoUrl={settings.logo_url} />
+      <SiteHeader lang={lang} altPath={`/product/${p.id}`} logoUrl={settings.logo_url} name={shop.name} />
       <div className="crumb">
         <Link href={prefix(lang) || "/"} className="link back">
           <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -100,17 +101,20 @@ export default async function ProductPage({ params }: Props) {
               })}
             </div>
           )}
-          {SHOP.whatsapp && (
+          {shop.whatsapp && (
             <>
-              <a className="btn" href={whatsappLink(t.msg(name, p.price, p.purity, p.weight, url))} target="_blank" rel="noopener" style={{ marginTop: 22 }}>
+              <a className="btn" href={whatsappLink(t.msg(name, p.price, p.purity, p.weight, url), shop.whatsapp)} target="_blank" rel="noopener" style={{ marginTop: 22 }}>
                 {t.wa}
+              </a>
+              <a className="btn ghost" href={`tel:+${shop.whatsapp}`} style={{ marginTop: 10 }}>
+                {t.call}
               </a>
               <p className="hint" style={{ marginTop: 12 }}>{t.waHint}</p>
             </>
           )}
         </div>
       </main>
-      <SiteFooter />
+      <SiteFooter whatsapp={shop.whatsapp} />
       <Dock current="shop" lang={lang} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

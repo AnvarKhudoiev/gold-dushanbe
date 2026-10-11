@@ -44,7 +44,11 @@ create policy "seller deletes" on public.products
 create table if not exists public.shop_settings (
   id int primary key default 1 check (id = 1),
   logo_url text,
-  hero_url text
+  hero_url text,
+  about text,
+  about_tj text,
+  shop_name text,
+  whatsapp text
 );
 insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
 alter table public.shop_settings enable row level security;

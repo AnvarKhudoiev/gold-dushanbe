@@ -1,18 +1,17 @@
 import Link from "next/link";
-import { SHOP } from "@/lib/config";
 import { T, prefix, type Lang } from "@/lib/i18n";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 
 /** altPath: путь страницы без языка, например "/" или "/product/123". */
-export default function SiteHeader({ lang, altPath = "/", logoUrl }: { lang: Lang; altPath?: string; logoUrl?: string | null }) {
+export default function SiteHeader({ lang, altPath = "/", logoUrl, name }: { lang: Lang; altPath?: string; logoUrl?: string | null; name: string }) {
   const rest = altPath === "/" ? "" : altPath;
   return (
     <header className="top">
       <Link href={prefix(lang) || "/"} className="brand">
         <Logo url={logoUrl} />
         <div style={{ minWidth: 0 }}>
-          <span className="nm">{SHOP.name}</span>
+          <span className="nm">{name}</span>
           <p>{T[lang].tagline}</p>
         </div>
       </Link>

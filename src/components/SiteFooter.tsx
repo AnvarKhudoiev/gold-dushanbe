@@ -1,12 +1,15 @@
 import { SHOP } from "@/lib/config";
 
-export default function SiteFooter() {
+export default function SiteFooter({ whatsapp = SHOP.whatsapp }: { whatsapp?: string }) {
   return (
     <footer className="foot">
       <span>{SHOP.address}</span>
-      {SHOP.whatsapp && (
-        <a href={`https://wa.me/${SHOP.whatsapp}`} target="_blank" rel="noopener">
-          WhatsApp: +{SHOP.whatsapp}
+      {whatsapp && (
+        <a href={`tel:+${whatsapp}`}>+{whatsapp}</a>
+      )}
+      {whatsapp && (
+        <a href={`https://wa.me/${whatsapp}`} target="_blank" rel="noopener">
+          WhatsApp: +{whatsapp}
         </a>
       )}
       {SHOP.telegram && (

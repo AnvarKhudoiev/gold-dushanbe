@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "../../globals.css";
-import { SHOP } from "@/lib/config";
+import { SHOP, resolveShop } from "@/lib/config";
+import { fetchSettings } from "@/lib/supabase";
 import { T, htmlLang, isLang } from "@/lib/i18n";
 import { ArtDefs } from "@/components/Art";
-import ThemeScript from "@/components/ThemeScript";
 import { DEMO_DOCK } from "@/lib/config";
 
 type Props = { children: React.ReactNode; params: Promise<{ lang: string }> };
@@ -12,12 +12,13 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
   const { lang } = await params;
   const l = isLang(lang) ? lang : "ru";
   const t = T[l];
+  const name = resolveShop(await fetchSettings()).name;
   return {
     metadataBase: new URL(SHOP.siteUrl),
-    title: { default: t.siteTitle, template: `%s | ${SHOP.name}` },
+    title: { default: t.siteTitle.replace(SHOP.name, name), template: `%s | ${name}` },
     description: t.siteDesc,
     icons: { icon: "/icon.svg" },
-    openGraph: { type: "website", siteName: SHOP.name, locale: l === "tj" ? "tg_TJ" : "ru_RU" },
+    openGraph: { type: "website", siteName: name, locale: l === "tj" ? "tg_TJ" : "ru_RU" },
     alternates: {
       canonical: l === "tj" ? "/tj" : "/",
       languages: { ru: "/", tg: "/tj", "x-default": "/" },
@@ -28,10 +29,7 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F8F6F5" },
-    { media: "(prefers-color-scheme: dark)", color: "#141012" },
-  ],
+  themeColor: "#F8F6F5",
 };
 
 export default async function SiteLayout({ children, params }: Props) {
@@ -40,7 +38,6 @@ export default async function SiteLayout({ children, params }: Props) {
   return (
     <html lang={htmlLang(l)} suppressHydrationWarning>
       <head>
-        <ThemeScript />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

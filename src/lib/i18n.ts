@@ -53,6 +53,7 @@ type Dict = {
   hero: string;
   heroSub: string;
   cta: string;
+  call: string;
   cNew: string;
   cUsed: string;
   cNewTag: string;
@@ -68,6 +69,13 @@ type Dict = {
   dockShop: string;
   dockAdmin: string;
   note: string;
+  aboutTitle: string;
+  f1t: string;
+  f1d: string;
+  f2t: string;
+  f2d: string;
+  f3t: string;
+  f3d: string;
 };
 
 const ru: Dict = {
@@ -100,6 +108,7 @@ const ru: Dict = {
   hero: "Украшения из золота",
   heroSub: "Актуальное наличие, цены и вес. Выберите украшение и напишите нам в WhatsApp.",
   cta: "Смотреть коллекцию",
+  call: "Позвонить",
   cNew: "Новые",
   cUsed: "Б/у · выкуплено",
   cNewTag: "Новинка",
@@ -115,6 +124,13 @@ const ru: Dict = {
   dockShop: "Витрина",
   dockAdmin: "Продавец",
   note: "",
+  aboutTitle: "О магазине",
+  f1t: "Проба 585 и 750",
+  f1d: "Проба и вес указаны в каждой карточке",
+  f2t: "Актуальное наличие",
+  f2d: "Сразу видно, что есть в магазине",
+  f3t: "Заказ в WhatsApp",
+  f3d: "Откроется чат с готовым сообщением",
 };
 
 const tj: Dict = {
@@ -147,6 +163,7 @@ const tj: Dict = {
   hero: "Маснуоти тилло",
   heroSub: "Мавҷудияти ҳозира, нарх ва вазн. Маснуотро интихоб кунед ва дар WhatsApp нависед.",
   cta: "Дидани коллексия",
+  call: "Занг задан",
   cNew: "Нав",
   cUsed: "Истифодашуда · харидорӣ",
   cNewTag: "Нав",
@@ -162,6 +179,13 @@ const tj: Dict = {
   dockShop: "Витрина",
   dockAdmin: "Фурӯшанда",
   note: "",
+  aboutTitle: "Дар бораи мағоза",
+  f1t: "Проба 585 ва 750",
+  f1d: "Проба ва вазн дар ҳар корт нишон дода шудааст",
+  f2t: "Мавҷудияти ҳозира",
+  f2d: "Фавран мебинед, ки дар мағоза чӣ ҳаст",
+  f3t: "Фармоиш дар WhatsApp",
+  f3d: "Чат бо паёми тайёр кушода мешавад",
 };
 
 export const T: Record<Lang, Dict> = { ru, tj };

@@ -15,15 +15,15 @@ const SUN = (
   </svg>
 );
 
-function systemDark() {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
 export default function ThemeToggle({ lang = "ru" }: { lang?: Lang }) {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    const t = document.documentElement.getAttribute("data-theme");
-    setDark(t ? t === "dark" : systemDark());
+    let t: string | null = null;
+    try {
+      t = localStorage.getItem("gd_t");
+    } catch {}
+    if (t) document.documentElement.setAttribute("data-theme", t);
+    setDark(t === "dark");
   }, []);
   const t = T[lang];
   return (

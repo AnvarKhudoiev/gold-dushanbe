@@ -16,6 +16,14 @@ export function money(n: number): string {
   return Number(n).toLocaleString("ru-RU") + " с";
 }
 
-export function whatsappLink(text: string): string {
-  return `https://wa.me/${SHOP.whatsapp}?text=${encodeURIComponent(text)}`;
+export function whatsappLink(text: string, number: string = SHOP.whatsapp): string {
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+}
+
+/** Название и WhatsApp: сначала из админки, иначе из переменных окружения. */
+export function resolveShop(settings?: { shop_name?: string | null; whatsapp?: string | null } | null) {
+  return {
+    name: settings?.shop_name?.trim() || SHOP.name,
+    whatsapp: (settings?.whatsapp || "").replace(/\D/g, "") || SHOP.whatsapp,
+  };
 }

@@ -30,4 +30,10 @@ export type Product = {
 export type ShopSettings = {
   logo_url: string | null;
   hero_url: string | null;
+  /** Описание магазина на главном экране (русский и таджикский) */
+  about: string | null;
+  about_tj: string | null;
+  /** Название и WhatsApp из админки (если пусто, берутся из переменных окружения) */
+  shop_name: string | null;
+  whatsapp: string | null;
 };
