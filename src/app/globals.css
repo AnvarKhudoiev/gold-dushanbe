@@ -562,3 +562,11 @@ header.top .brand .tg{display:block;margin-top:5px;font-size:9.5px;letter-spacin
 .catpic input[type=file]{max-width:100%;font-size:12px}
 
 @media(max-width:380px){header.top .brand h1{font-size:12px;letter-spacing:0}header.top .brand #shopSub{font-size:6px;letter-spacing:.06em}#logo svg,#logo img{width:26px!important;height:26px!important}header.top .brand{gap:6px}}
+
+/* шапка на телефоне: логотип и название компактнее, 10px до меню и языков */
+@media(max-width:620px){header.top .brand .nm{font-size:14px;letter-spacing:.01em}header.top .brand .tg{font-size:6.5px;letter-spacing:.08em}header.top .brand img,header.top .brand svg{width:28px!important;height:28px!important}header.top .brand{gap:6px}}
+@media(max-width:380px){header.top .brand .nm{font-size:12px;letter-spacing:0}header.top .brand .tg{font-size:6px;letter-spacing:.05em}header.top .brand img,header.top .brand svg{width:24px!important;height:24px!important}}
+
+.ic b{top:3px!important;right:1px!important;bottom:auto!important;min-width:15px!important;height:15px!important;border-radius:8px!important;font-size:9px!important;font-weight:700!important;padding:0 3px!important;background:var(--gold)!important;color:#fff!important;box-shadow:0 0 0 2px var(--surface,#fff)}.ic b:empty,.ic b.z{display:none!important}
+
+header.top .brand > div,header.top .brand .nm,header.top .brand .tg,header.top .brand h1,header.top .brand #shopSub{text-align:center}

@@ -129,7 +129,7 @@ export default function SiteHeader({
               <svg width="24" height="24" viewBox="0 0 24 24" strokeWidth="1.6" {...ico} aria-hidden="true">
                 <path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.4-7 10-7 10z" />
               </svg>
-              <b>{fav.length}</b>
+              {fav.length > 0 && <b>{fav.length}</b>}
             </button>
             <ThemeToggle lang={lang} />
           </div>
