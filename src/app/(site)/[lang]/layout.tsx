@@ -6,6 +6,7 @@ import { T, htmlLang, isLang } from "@/lib/i18n";
 import { ArtDefs } from "@/components/Art";
 import { StoreProvider } from "@/components/StoreContext";
 import { DEMO_DOCK } from "@/lib/config";
+import Analytics from "@/components/Analytics";
 
 type Props = { children: React.ReactNode; params: Promise<{ lang: string }> };
 
@@ -48,6 +49,7 @@ export default async function SiteLayout({ children, params }: Props) {
       </head>
       <body className={DEMO_DOCK ? "withdock" : undefined}>
         <ArtDefs />
+        <Analytics />
         <StoreProvider>{children}</StoreProvider>
       </body>
     </html>

@@ -88,3 +88,10 @@ npm run dev                  # http://localhost:3000
 ## «Будильник» для бесплатного Supabase
 
 Файл `.github/workflows/keepalive.yml` раз в 3 дня открывает сайт, чтобы бесплатная база не засыпала. Нужно один раз задать переменную `SITE_URL` (GitHub → Settings → Secrets and variables → Actions → Variables). Проверить: вкладка Actions → keepalive → Run workflow. GitHub отключает расписание, если в репозитории 60 дней нет изменений: тогда включи его снова вручную. Резервные копии бесплатный Supabase не делает: выгружай таблицы (CSV) и фото вручную раз в 1–2 недели.
+
+
+## Статистика (Google Analytics 4)
+
+1. analytics.google.com → создай ресурс для golddushanbe.com → «Потоки данных» → Веб → скопируй ID вида `G-XXXXXXX`.
+2. Vercel → Settings → Environment Variables → `NEXT_PUBLIC_GA_ID` = этот ID → Redeploy.
+3. Отчёты → Вовлечённость → События: `whatsapp_click`, `telegram_click`, `phone_click` (в параметре `link_location`: header / footer / float / page). Чтобы видеть их как конверсии, отметь нужные события «Ключевое событие».
