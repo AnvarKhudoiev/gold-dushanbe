@@ -30,10 +30,16 @@ export type Product = {
 export type ShopSettings = {
   logo_url: string | null;
   hero_url: string | null;
+  /** Главное фото для телефона (если нет — берётся hero_url) */
+  hero_mobile_url?: string | null;
   /** Описание магазина на главном экране (русский и таджикский) */
   about: string | null;
   about_tj: string | null;
   /** Название и WhatsApp из админки (если пусто, берутся из переменных окружения) */
   shop_name: string | null;
   whatsapp: string | null;
+  /** Ник Telegram без @ (из админки; если пусто, из NEXT_PUBLIC_TELEGRAM) */
+  telegram: string | null;
+  /** Свои фото плиток категорий: { "Кольца": "https://…" } */
+  category_images: Record<string, string> | null;
 };

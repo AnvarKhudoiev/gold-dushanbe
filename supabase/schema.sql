@@ -48,7 +48,10 @@ create table if not exists public.shop_settings (
   about text,
   about_tj text,
   shop_name text,
-  whatsapp text
+  whatsapp text,
+  telegram text,
+  category_images jsonb,
+  hero_mobile_url text
 );
 insert into public.shop_settings (id) values (1) on conflict (id) do nothing;
 alter table public.shop_settings enable row level security;

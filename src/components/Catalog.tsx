@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
-import { CATEGORIES, SET_CATEGORY, money } from "@/lib/config";
+import { CATEGORIES, SET_CATEGORY, SHOP, money, whatsappLink } from "@/lib/config";
 import { T, pName, pDesc, prefix, type Lang } from "@/lib/i18n";
 import Photo from "./Photo";
+import WaIcon from "./WaIcon";
 import { useStore } from "./StoreContext";
 
 type Cond = "all" | "new" | "used";
@@ -30,7 +31,7 @@ const SORT_ICON = (
   </svg>
 );
 
-export default function Catalog({ products, lang }: { products: Product[]; lang: Lang }) {
+export default function Catalog({ products, lang, whatsapp = SHOP.whatsapp }: { products: Product[]; lang: Lang; whatsapp?: string }) {
   const t = T[lang];
   const { cat, setCat, fOpen, setFOpen, favOnly, setFavOnly, fav, toggleFav, focusQ } = useStore();
   const [cond, setCond] = useState<Cond>("all");
@@ -61,7 +62,11 @@ export default function Catalog({ products, lang }: { products: Product[]; lang:
   const nAct = (cond !== "all" ? 1 : 0) + (onlyStock ? 1 : 0) + (favOnly ? 1 : 0) + (q.trim() ? 1 : 0);
 
   return (
-    <>
+    <section className="wrap lst">
+      <div className="sec-h">
+        <div className="eyebrow c">{t.listEy}</div>
+        <h2>{t.catTitle}</h2>
+      </div>
       <div className="chips">
         {["Все", ...CATEGORIES].map((c) => (
           <button key={c} className="cat" aria-pressed={cat === c} onClick={() => setCat(c)}>
@@ -118,23 +123,35 @@ export default function Catalog({ products, lang }: { products: Product[]; lang:
           return (
             <div key={p.id} className={"card" + (p.in_stock ? "" : " sold")} style={{ ["--i" as string]: Math.min(i, 12) }}>
               <Link href={`${prefix(lang)}/product/${p.id}`} className="cardlink">
-                <Photo p={p} lang={lang} tags={false} />
+                <Photo p={p} lang={lang} tags={false}>
+                  <span className={"bdg" + (used ? " u" : "")}>{used ? t.cUsedTag : t.cNewTag}</span>
+                </Photo>
                 <div className="info">
-                  <span className="lbl">{used ? t.cUsedTag : t.cNewTag}</span>
                   <span className="n">{pName(p, lang)}</span>
                   <span className="d">
-                    {p.category === SET_CATEGORY
-                      ? p.sold_separately
-                        ? t.sepYes
-                        : t.sepNo
-                      : [p.purity, p.weight != null ? `${p.weight} ${t.g}` : null].filter(Boolean).join(" · ")}
+                    {p.weight != null ? `${p.weight} ${t.g}` : ""}
+                    {p.weight != null && p.purity ? <i /> : null}
+                    {p.purity ? `${t.purity} ${p.purity}` : ""}
                   </span>
                   <span className="p">
-                    {money(p.price)}
+                    {money(p.price, lang)}
                     {p.in_stock && <span className="dot">{t.inStock}</span>}
                   </span>
                 </div>
               </Link>
+              {whatsapp && (
+                <div className="cta">
+                  <a
+                    className="gbtn sm wa"
+                    href={whatsappLink(t.msg(pName(p, lang), p.price, p.purity, p.weight, `${SHOP.siteUrl}${prefix(lang)}/product/${p.id}`), whatsapp)}
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    <WaIcon size={18} />
+                    <span>{t.wa}</span>
+                  </a>
+                </div>
+              )}
               <button type="button" className={"heart" + (on ? " on" : "")} aria-pressed={on} aria-label={t.favs} onClick={() => toggleFav(p.id)}>
                 {HEART}
               </button>
@@ -142,6 +159,6 @@ export default function Catalog({ products, lang }: { products: Product[]; lang:
           );
         })}
       </div>
-    </>
+    </section>
   );
 }

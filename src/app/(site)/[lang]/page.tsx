@@ -4,6 +4,8 @@ import { SHOP, resolveShop } from "@/lib/config";
 import { isLang } from "@/lib/i18n";
 import Catalog from "@/components/Catalog";
 import Cover from "@/components/Cover";
+import Categories from "@/components/Categories";
+import Trust from "@/components/Trust";
 import Hero from "@/components/Hero";
 import Dock from "@/components/Dock";
 import SiteHeader from "@/components/SiteHeader";
@@ -28,11 +30,14 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
     <>
       <SiteHeader lang={lang} altPath="/" logoUrl={settings.logo_url} name={shop.name} address={SHOP.address} whatsapp={shop.whatsapp} />
       <main>
-        <Hero lang={lang} heroUrl={settings.hero_url} />
+        <Hero lang={lang} heroUrl={settings.hero_url} heroMobileUrl={settings.hero_mobile_url ?? null} />
+        <Categories products={products} lang={lang} images={settings.category_images} />
+        <div id="catalog" />
+        <Catalog products={products} lang={lang} whatsapp={shop.whatsapp} />
         <Cover lang={lang} settings={settings} />
-        <Catalog products={products} lang={lang} />
+        <Trust lang={lang} />
       </main>
-      <SiteFooter whatsapp={shop.whatsapp} />
+      <SiteFooter whatsapp={shop.whatsapp} telegram={shop.telegram} lang={lang} name={shop.name} logoUrl={settings.logo_url} />
       <Dock current="shop" lang={lang} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

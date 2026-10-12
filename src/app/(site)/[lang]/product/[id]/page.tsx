@@ -62,6 +62,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <>
       <SiteHeader lang={lang} altPath={`/product/${p.id}`} logoUrl={settings.logo_url} name={shop.name} address={SHOP.address} whatsapp={shop.whatsapp} />
+      <div className="wrap">
       <div className="crumb">
         <Link href={prefix(lang) || "/"} className="link back">
           <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -75,7 +76,7 @@ export default async function ProductPage({ params }: Props) {
         <div>
           <div className="eyebrow">{t.cats[p.category] ?? p.category}</div>
           <h1>{name}</h1>
-          <div className="pr">{money(p.price)}</div>
+          <div className="pr">{money(p.price, lang)}</div>
           <dl className="spec">
             {p.weight ? (<div><dt>{t.weight}</dt><dd>{p.weight} {t.g}</dd></div>) : null}
             {p.purity ? (<div><dt>{t.purity}</dt><dd>{p.purity}</dd></div>) : null}
@@ -114,7 +115,8 @@ export default async function ProductPage({ params }: Props) {
           )}
         </div>
       </main>
-      <SiteFooter whatsapp={shop.whatsapp} />
+      </div>
+      <SiteFooter whatsapp={shop.whatsapp} telegram={shop.telegram} lang={lang} name={shop.name} logoUrl={settings.logo_url} />
       <Dock current="shop" lang={lang} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
     </>

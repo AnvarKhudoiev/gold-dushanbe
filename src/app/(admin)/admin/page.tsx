@@ -81,9 +81,10 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [loginErr, setLoginErr] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
-  const [settings, setSettings] = useState<ShopSettings>({ logo_url: null, hero_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null });
+  const [settings, setSettings] = useState<ShopSettings>({ logo_url: null, hero_url: null, hero_mobile_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null, telegram: null, category_images: null });
   const [nameIn, setNameIn] = useState("");
   const [waIn, setWaIn] = useState("");
+  const [tgIn, setTgIn] = useState("");
   const [aboutRu, setAboutRu] = useState("");
   const [aboutTj, setAboutTj] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -104,9 +105,10 @@ export default function Admin() {
     else setProducts((data ?? []).map(normalize));
     const st = await sb.from("shop_settings").select("*").eq("id", 1).maybeSingle();
     if (st.data) {
-      setSettings({ logo_url: st.data.logo_url ?? null, hero_url: st.data.hero_url ?? null, about: st.data.about ?? null, about_tj: st.data.about_tj ?? null, shop_name: st.data.shop_name ?? null, whatsapp: st.data.whatsapp ?? null });
+      setSettings({ logo_url: st.data.logo_url ?? null, hero_url: st.data.hero_url ?? null, hero_mobile_url: st.data.hero_mobile_url ?? null, about: st.data.about ?? null, about_tj: st.data.about_tj ?? null, shop_name: st.data.shop_name ?? null, whatsapp: st.data.whatsapp ?? null, telegram: st.data.telegram ?? null, category_images: st.data.category_images ?? null });
       setNameIn(st.data.shop_name ?? "");
       setWaIn(st.data.whatsapp ?? "");
+      setTgIn(st.data.telegram ?? "");
       setAboutRu(st.data.about ?? "");
       setAboutTj(st.data.about_tj ?? "");
     }
@@ -239,18 +241,19 @@ export default function Admin() {
   }
 
   /** Логотип или главное фото: загрузка и сброс. */
-  async function setImage(kind: "logo" | "hero", f: File | undefined) {
+  async function setImage(kind: "logo" | "hero" | "hero_m", f: File | undefined) {
     if (!f) return;
     try {
-      const old = kind === "logo" ? settings.logo_url : settings.hero_url;
+      const col = kind === "logo" ? "logo_url" : kind === "hero" ? "hero_url" : "hero_mobile_url";
+      const old = settings[col];
       const blob = kind === "logo" ? await compress(f, 256, "image/png") : await compress(f, 1600, "image/jpeg", 0.78);
       const url = await upload(blob, kind, kind === "logo" ? "png" : "jpg", kind === "logo" ? "image/png" : "image/jpeg");
-      const next = { ...settings, [kind === "logo" ? "logo_url" : "hero_url"]: url };
+      const next = { ...settings, [col]: url };
       const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
       if (res.error) throw res.error;
-      await removeFile(old);
+      await removeFile(old ?? null);
       setSettings(next);
-      say(kind === "logo" ? "Логотип обновлён" : "Главное фото обновлено");
+      say(kind === "logo" ? "Логотип обновлён" : kind === "hero" ? "Главное фото обновлено" : "Фото для телефона обновлено");
     } catch (err) {
       say("Ошибка: " + (err instanceof Error ? err.message : "не удалось загрузить") + " (выполнен ли migration-v2.sql?)");
     }
@@ -261,21 +264,53 @@ export default function Admin() {
       ...settings,
       shop_name: nameIn.trim() || null,
       whatsapp: waIn.replace(/\D/g, "") || null,
+      telegram: tgIn.trim().replace(/^(https?:\/\/)?(t\.me\/)?@?/i, "").replace(/\/.*$/, "") || null,
       about: aboutRu.trim() || null,
       about_tj: aboutTj.trim() || null,
     };
     const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
-    if (res.error) return say("Ошибка: " + res.error.message + " (выполнен ли migration-v2.sql?)");
+    if (res.error) return say("Ошибка: " + res.error.message + " (выполнены ли migration-v2.sql и migration-v3.sql?)");
     setSettings(next);
     say("Данные сохранены");
   }
 
-  async function resetImage(kind: "logo" | "hero") {
-    const old = kind === "logo" ? settings.logo_url : settings.hero_url;
-    const next = { ...settings, [kind === "logo" ? "logo_url" : "hero_url"]: null };
+  /** Фото плитки категории на главной: загрузка и сброс. */
+  async function setCatImage(cat: string, f: File | undefined) {
+    if (!f) return;
+    try {
+      const old = settings.category_images?.[cat] ?? null;
+      const blob = await compress(f, 700, "image/jpeg", 0.8);
+      const url = await upload(blob, "cat", "jpg", "image/jpeg");
+      const next = { ...settings, category_images: { ...(settings.category_images ?? {}), [cat]: url } };
+      const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
+      if (res.error) throw res.error;
+      await removeFile(old ?? null);
+      setSettings(next);
+      say("Фото категории обновлено");
+    } catch (err) {
+      say("Ошибка: " + (err instanceof Error ? err.message : "не удалось загрузить") + " (выполнен ли migration-v3.sql?)");
+    }
+  }
+
+  async function resetCatImage(cat: string) {
+    const old = settings.category_images?.[cat] ?? null;
+    const rest = { ...(settings.category_images ?? {}) };
+    delete rest[cat];
+    const next = { ...settings, category_images: Object.keys(rest).length ? rest : null };
     const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
     if (res.error) return say("Ошибка: " + res.error.message);
-    await removeFile(old);
+    await removeFile(old ?? null);
+    setSettings(next);
+    say("Фото категории сброшено");
+  }
+
+  async function resetImage(kind: "logo" | "hero" | "hero_m") {
+    const col = kind === "logo" ? "logo_url" : kind === "hero" ? "hero_url" : "hero_mobile_url";
+    const old = settings[col];
+    const next = { ...settings, [col]: null };
+    const res = await sb.from("shop_settings").upsert({ id: 1, ...next });
+    if (res.error) return say("Ошибка: " + res.error.message);
+    await removeFile(old ?? null);
     setSettings(next);
     say(kind === "logo" ? "Логотип сброшен" : "Фото сброшено");
   }
@@ -486,7 +521,21 @@ export default function Admin() {
               </div>
             </div>
             <div className="fld">
-              <label>Главное фото (на входе)</label>
+              <label>Главное фото для телефона (необязательно — иначе берётся основное)</label>
+              <div className="bar" style={{ justifyContent: "flex-start", gap: 16 }}>
+                <div className="pv" style={{ width: 80, aspectRatio: "9/16" }}>
+                  {settings.hero_mobile_url ? <img src={settings.hero_mobile_url} alt="" /> : <span className="hint">как основное</span>}
+                </div>
+                <div>
+                  <input type="file" accept="image/*" onChange={(e) => setImage("hero_m", e.target.files?.[0])} />
+                  <div style={{ marginTop: 8 }}>
+                    <button type="button" className="link no" onClick={() => resetImage("hero_m")}>Сбросить</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="fld">
+              <label>Главное фото для компьютера (на входе)</label>
               <div className="bar" style={{ justifyContent: "flex-start", gap: 16 }}>
                 <div className="pv" style={{ width: 140, aspectRatio: "16/10" }}>
                   {settings.hero_url ? <img src={settings.hero_url} alt="" /> : <span className="hint">по умолчанию</span>}
@@ -500,6 +549,23 @@ export default function Admin() {
               </div>
             </div>
           </div>
+          <div className="fld wide" style={{ marginTop: 16 }}>
+            <label>Фото категорий на главной (если не загружено, берётся фото первого товара)</label>
+            <div className="catpics">
+              {CATEGORIES.map((c) => (
+                <div className="catpic" key={c}>
+                  <div className="pv" style={{ width: 72 }}>
+                    {settings.category_images?.[c] ? <img src={settings.category_images[c]} alt="" /> : <span className="hint">авто</span>}
+                  </div>
+                  <b>{c}</b>
+                  <input type="file" accept="image/*" aria-label={`Фото: ${c}`} onChange={(e) => setCatImage(c, e.target.files?.[0])} />
+                  {settings.category_images?.[c] && (
+                    <button type="button" className="link no" onClick={() => resetCatImage(c)}>Сбросить</button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="f" style={{ marginTop: 16 }}>
             <div className="fld">
               <label htmlFor="sn">Название</label>
@@ -508,6 +574,10 @@ export default function Admin() {
             <div className="fld">
               <label htmlFor="sw">WhatsApp (с кодом страны)</label>
               <input id="sw" inputMode="tel" value={waIn} onChange={(e) => setWaIn(e.target.value)} placeholder={SHOP.whatsapp || "992900000000"} />
+            </div>
+            <div className="fld">
+              <label htmlFor="stg">Telegram (ник, без @)</label>
+              <input id="stg" value={tgIn} onChange={(e) => setTgIn(e.target.value)} placeholder={SHOP.telegram || "golddushanbe"} />
             </div>
             <div className="fld wide">
               <label htmlFor="abr">Описание магазина (под фото на входе)</label>

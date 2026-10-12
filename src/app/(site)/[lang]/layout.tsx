@@ -48,9 +48,7 @@ export default async function SiteLayout({ children, params }: Props) {
       </head>
       <body className={DEMO_DOCK ? "withdock" : undefined}>
         <ArtDefs />
-        <div className="wrap">
-          <StoreProvider>{children}</StoreProvider>
-        </div>
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );

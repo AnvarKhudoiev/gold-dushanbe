@@ -27,6 +27,26 @@ export function pDesc(p: Product, lang: Lang): string | null {
 
 type Dict = {
   tagline: string;
+  tagHdr: string;
+  hEy: string;
+  h1a: string;
+  h1b: string;
+  hSub: string;
+  ctaCat: string;
+  b1: string;
+  b2: string;
+  b3: string;
+  catsEy: string;
+  catsT: string;
+  listEy: string;
+  tr1t: string;
+  tr1d: string;
+  tr2t: string;
+  tr2d: string;
+  tr3t: string;
+  tr3d: string;
+  tr4t: string;
+  tr4d: string;
   all: string;
   search: string;
   onlyStock: string;
@@ -90,6 +110,26 @@ type Dict = {
 
 const ru: Dict = {
   tagline: SHOP.tagline,
+  tagHdr: "Скупка · Продажа · Золото",
+  hEy: "Ювелирные изделия",
+  h1a: "Больше, чем просто",
+  h1b: "украшения",
+  hSub: "Золото, которое подчёркивает вашу индивидуальность",
+  ctaCat: "Смотреть каталог",
+  b1: "Гарантия на изделия",
+  b2: "Честный вес и проба",
+  b3: "Быстрая связь через WhatsApp",
+  catsEy: "Категории",
+  catsT: "Выберите нужную категорию",
+  listEy: "Товары",
+  tr1t: "100% оригинал",
+  tr1d: "Только проверенные изделия",
+  tr2t: "Честный вес",
+  tr2d: "Точные граммы и проба",
+  tr3t: "Надёжная сделка",
+  tr3d: "Ваша безопасность для нас важна",
+  tr4t: "Связь через WhatsApp",
+  tr4d: "Быстро ответим на все вопросы",
   all: "Все",
   search: "Поиск",
   onlyStock: "Только в наличии",
@@ -119,7 +159,7 @@ const ru: Dict = {
   heroSub: "Актуальное наличие, цены и вес. Выберите украшение и напишите нам в WhatsApp.",
   cta: "Смотреть коллекцию",
   call: "Позвонить",
-  catTitle: "Каталог",
+  catTitle: "Каталог изделий",
   filt: "Фильтры",
   home: "Главная",
   menu: "Меню",
@@ -155,6 +195,26 @@ const ru: Dict = {
 
 const tj: Dict = {
   tagline: process.env.NEXT_PUBLIC_SHOP_TAGLINE_TJ || "Тиллои 585 ва 750 · Душанбе",
+  tagHdr: "Харид · Фурӯш · Тилло",
+  hEy: "Маснуоти заргарӣ",
+  h1a: "Бештар аз танҳо",
+  h1b: "зебу зинат",
+  hSub: "Тиллое, ки хосияти шуморо таъкид мекунад",
+  ctaCat: "Дидани каталог",
+  b1: "Кафолат барои маснуот",
+  b2: "Вазн ва пробаи ҳалол",
+  b3: "Тамоси зуд тавассути WhatsApp",
+  catsEy: "Категорияҳо",
+  catsT: "Категорияи лозимиро интихоб кунед",
+  listEy: "Маҳсулот",
+  tr1t: "100% аслӣ",
+  tr1d: "Танҳо маснуоти санҷидашуда",
+  tr2t: "Вазни ҳалол",
+  tr2d: "Грамм ва пробаи дақиқ",
+  tr3t: "Шартномаи боэътимод",
+  tr3d: "Амнияти шумо барои мо муҳим аст",
+  tr4t: "Тамос дар WhatsApp",
+  tr4d: "Ба ҳамаи саволҳо зуд ҷавоб медиҳем",
   all: "Ҳама",
   search: "Ҷустуҷӯ",
   onlyStock: "Танҳо мавҷуд",
@@ -173,18 +233,18 @@ const tj: Dict = {
   back: "Тамоми каталог",
   cats: { Кольца: "Ангуштарин", Серьги: "Гӯшвор", Цепочки: "Занҷир", Браслеты: "Дастбанд", Подвески: "Овезон", Комплекты: "Маҷмӯа" },
   msg: (name, price, purity, weight, url) =>
-    `Салом! Ба ман ин маҳсулот писанд омад: ${name} (${money(price)})${purity ? `, проба ${purity}` : ""}${weight ? `, ${weight} г` : ""}. Оё мавҷуд аст? ${url}`,
+    `Салом! Ба ман ин маҳсулот писанд омад: ${name} (${money(price, "tj")})${purity ? `, проба ${purity}` : ""}${weight ? `, ${weight} г` : ""}. Оё мавҷуд аст? ${url}`,
   siteTitle: `${SHOP.name} — ҷавоҳирот дар Душанбе`,
   siteDesc: `${SHOP.name}: каталоги маснуоти тилло дар Душанбе. Ангуштарин, гӯшвор, занҷир, дастбанд. Мавҷудияти навтарин, нарх, вазн ва проба.`,
   productDesc: (p) =>
-    `${p.name_tj || p.name}, ${money(p.price)}${p.purity ? `, проба ${p.purity}` : ""}${p.weight ? `, ${p.weight} г` : ""}. ${p.in_stock ? "Мавҷуд аст" : "Мавҷуд нест"}.`,
+    `${p.name_tj || p.name}, ${money(p.price, "tj")}${p.purity ? `, проба ${p.purity}` : ""}${p.weight ? `, ${p.weight} г` : ""}. ${p.in_stock ? "Мавҷуд аст" : "Мавҷуд нест"}.`,
   langName: "TJ",
   eyebrow: "Коллексия · Душанбе",
   hero: "Маснуоти тилло",
   heroSub: "Мавҷудияти ҳозира, нарх ва вазн. Маснуотро интихоб кунед ва дар WhatsApp нависед.",
   cta: "Дидани коллексия",
   call: "Занг задан",
-  catTitle: "Каталог",
+  catTitle: "Каталоги маснуот",
   filt: "Филтрҳо",
   home: "Асосӣ",
   menu: "Феҳрист",

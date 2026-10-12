@@ -50,15 +50,18 @@ export function normalize(row: Record<string, unknown>): import("./types").Produ
 }
 
 export async function fetchSettings(): Promise<import("./types").ShopSettings> {
-  const empty = { logo_url: null, hero_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null };
+  const empty = { logo_url: null, hero_url: null, hero_mobile_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null, telegram: null, category_images: null };
   const { data, error } = await getServerClient().from("shop_settings").select("*").eq("id", 1).maybeSingle();
   if (error || !data) return empty;
   return {
     logo_url: data.logo_url ?? null,
     hero_url: data.hero_url ?? null,
+    hero_mobile_url: data.hero_mobile_url ?? null,
     about: data.about ?? null,
     about_tj: data.about_tj ?? null,
     shop_name: data.shop_name ?? null,
     whatsapp: data.whatsapp ?? null,
+    telegram: data.telegram ?? null,
+    category_images: data.category_images ?? null,
   };
 }
