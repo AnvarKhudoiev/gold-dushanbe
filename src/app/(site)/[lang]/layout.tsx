@@ -8,6 +8,8 @@ import { StoreProvider } from "@/components/StoreContext";
 import { DEMO_DOCK } from "@/lib/config";
 import Analytics from "@/components/Analytics";
 
+const FONTS = "https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600&display=swap";
+
 type Props = { children: React.ReactNode; params: Promise<{ lang: string }> };
 
 export async function generateMetadata({ params }: Pick<Props, "params">): Promise<Metadata> {
@@ -49,10 +51,12 @@ export default async function SiteLayout({ children, params }: Props) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600&display=swap"
-        />
+        {/* Шрифты грузятся без блокировки отрисовки: страница видна сразу, шрифт подменяется через swap */}
+        <link rel="stylesheet" href={FONTS} media="print" data-nb="1" suppressHydrationWarning />
+        <script dangerouslySetInnerHTML={{ __html: "document.querySelectorAll('link[data-nb]').forEach(function(l){var f=function(){l.media='all'};l.sheet?f():l.addEventListener('load',f)})" }} />
+        <noscript>
+          <link rel="stylesheet" href={FONTS} />
+        </noscript>
       </head>
       <body className={DEMO_DOCK ? "withdock" : undefined}>
         <ArtDefs />

@@ -183,7 +183,7 @@ export default function Admin() {
 
   async function upload(blob: Blob, prefix: string, ext: "jpg" | "png", contentType: string) {
     const path = `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const up = await sb.storage.from("products").upload(path, blob, { contentType });
+    const up = await sb.storage.from("products").upload(path, blob, { contentType, cacheControl: "31536000" });
     if (up.error) throw up.error;
     return sb.storage.from("products").getPublicUrl(path).data.publicUrl;
   }

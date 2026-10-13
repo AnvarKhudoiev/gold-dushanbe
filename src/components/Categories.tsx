@@ -12,7 +12,7 @@ function Tile({ c, src, label, onPick }: { c: string; src: string | null; label:
   return (
     <button type="button" className="ctile" onClick={onPick}>
       <span className="cph">
-        {src && !broken ? <img src={src} alt="" loading="lazy" onError={() => setBroken(true)} /> : <Art category={c} />}
+        {src && !broken ? <img src={src} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} /> : <Art category={c} />}
       </span>
       <span className="cl">
         <span>{label}</span>

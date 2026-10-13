@@ -11,7 +11,12 @@ import Dock from "@/components/Dock";
 import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 
-export const dynamic = "force-dynamic";
+// Страница собирается один раз и обновляется раз в минуту: открывается мгновенно, из кэша.
+export const revalidate = 60;
+
+export function generateStaticParams() {
+  return [{ lang: "ru" }, { lang: "tj" }];
+}
 
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params;

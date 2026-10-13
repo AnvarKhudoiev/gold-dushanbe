@@ -570,3 +570,16 @@ header.top .brand .tg{display:block;margin-top:5px;font-size:9.5px;letter-spacin
 .ic b{top:3px!important;right:1px!important;bottom:auto!important;min-width:15px!important;height:15px!important;border-radius:8px!important;font-size:9px!important;font-weight:700!important;padding:0 3px!important;background:var(--gold)!important;color:#fff!important;box-shadow:0 0 0 2px var(--surface,#fff)}.ic b:empty,.ic b.z{display:none!important}
 
 header.top .brand > div,header.top .brand .nm,header.top .brand .tg,header.top .brand h1,header.top .brand #shopSub{text-align:center}
+
+/* бегущая строка */
+@media (prefers-reduced-motion:no-preference){.fx-marq>div{animation:fxMarq 40s linear infinite;will-change:transform}.fx-marq:hover>div{animation-play-state:paused}@keyframes fxMarq{to{transform:translateX(-50%)}}}
+.fx-marq{background:#08142B;border-block:1px solid rgba(221,190,114,.28);overflow:hidden;white-space:nowrap;color:#DDBE72;font-family:var(--display);font-size:clamp(14px,1.8vw,18px);letter-spacing:.34em;text-transform:uppercase;padding:14px 0;user-select:none}
+.fx-marq>div{display:inline-flex}
+.fx-marq span{padding:0 1.6em}
+.fx-marq span::after{content:"◆";margin-left:3.2em;font-size:.6em;vertical-align:middle;opacity:.8}
+
+/* кнопка WhatsApp всегда у нижнего края карточки (в т.ч. у «нет в наличии») */
+.card .cardlink{flex:1 1 auto}
+
+/* perf: не рисуем карточки вне экрана */
+.grid>.card{content-visibility:auto;contain-intrinsic-size:auto 340px}

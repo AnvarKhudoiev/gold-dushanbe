@@ -6,7 +6,16 @@ const I = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as cons
 /** Баннер вверху: тёмно-синий фон, фото магазина (если загружено), крупный заголовок и три пункта доверия. */
 export default function Hero({ lang, heroUrl, heroMobileUrl }: { lang: Lang; heroUrl: string | null; heroMobileUrl?: string | null }) {
   const t = T[lang];
+  const words = t.tagHdr.split(" · ");
+  const unit = [...words, ...words, ...words, ...words];
   return (
+    <>
+    {heroUrl || heroMobileUrl ? (
+      <>
+        <link rel="preload" as="image" href={heroUrl || heroMobileUrl || ""} media="(min-width:621px)" fetchPriority="high" />
+        <link rel="preload" as="image" href={heroMobileUrl || heroUrl || ""} media="(max-width:620px)" fetchPriority="high" />
+      </>
+    ) : null}
     <section className={"hero2" + (heroUrl || heroMobileUrl ? "" : " nophoto")}>
       {heroUrl || heroMobileUrl ? (
         <div className="bg" style={{ "--d": `url(${heroUrl || heroMobileUrl})`, "--m": `url(${heroMobileUrl || heroUrl})` } as React.CSSProperties} />
@@ -61,5 +70,15 @@ export default function Hero({ lang, heroUrl, heroMobileUrl }: { lang: Lang; her
         </ul>
       </div>
     </section>
+    <div className="fx-marq" aria-hidden="true">
+      <div>
+        {[0, 1].map((k) =>
+          unit.map((w, i) => (
+            <span key={k + "-" + i}>{w}</span>
+          ))
+        )}
+      </div>
+    </div>
+    </>
   );
 }

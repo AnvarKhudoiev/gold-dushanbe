@@ -9,7 +9,12 @@ import SiteHeader from "@/components/SiteHeader";
 import SiteFooter from "@/components/SiteFooter";
 import Dock from "@/components/Dock";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+// Пустой список: страницы товаров строятся при первом заходе и дальше отдаются из кэша
+export function generateStaticParams() {
+  return [];
+}
 
 type Props = { params: Promise<{ lang: string; id: string }> };
 

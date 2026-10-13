@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import type { Product } from "@/lib/types";
 import { CATEGORIES, SET_CATEGORY, SHOP, money, whatsappLink } from "@/lib/config";
 import { T, pName, pDesc, prefix, type Lang } from "@/lib/i18n";
@@ -38,6 +38,7 @@ export default function Catalog({ products, lang, whatsapp = SHOP.whatsapp }: { 
   const [onlyStock, setOnlyStock] = useState(false);
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<Sort>("def");
+  const dq = useDeferredValue(q);
   const qRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function Catalog({ products, lang, whatsapp = SHOP.whatsapp }: { 
   }, [focusQ]);
 
   const list = useMemo(() => {
-    const s = q.trim().toLowerCase();
+    const s = dq.trim().toLowerCase();
     const res = products.filter(
       (p) =>
         (cat === "Все" || p.category === cat) &&
@@ -57,7 +58,7 @@ export default function Catalog({ products, lang, whatsapp = SHOP.whatsapp }: { 
     if (sort === "asc") res.sort((a, b) => a.price - b.price);
     if (sort === "desc") res.sort((a, b) => b.price - a.price);
     return res;
-  }, [products, cat, cond, onlyStock, q, lang, sort, favOnly, fav]);
+  }, [products, cat, cond, onlyStock, dq, lang, sort, favOnly, fav]);
 
   const nAct = (cond !== "all" ? 1 : 0) + (onlyStock ? 1 : 0) + (favOnly ? 1 : 0) + (q.trim() ? 1 : 0);
 
@@ -123,7 +124,7 @@ export default function Catalog({ products, lang, whatsapp = SHOP.whatsapp }: { 
           return (
             <div key={p.id} className={"card" + (p.in_stock ? "" : " sold")} style={{ ["--i" as string]: Math.min(i, 12) }}>
               <Link href={`${prefix(lang)}/product/${p.id}`} className="cardlink">
-                <Photo p={p} lang={lang} tags={false}>
+                <Photo p={p} lang={lang} tags={false} eager={i < 2}>
                   <span className={"bdg" + (used ? " u" : "")}>{used ? t.cUsedTag : t.cNewTag}</span>
                 </Photo>
                 <div className="info">

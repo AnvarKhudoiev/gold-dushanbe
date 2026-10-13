@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -17,7 +18,7 @@ export function getServerClient(): SupabaseClient {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
-export async function fetchProducts() {
+export const fetchProducts = cache(async () => {
   const { data, error } = await getServerClient()
     .from("products")
     .select("*")
@@ -27,16 +28,16 @@ export async function fetchProducts() {
     return [];
   }
   return (data ?? []).map(normalize);
-}
+});
 
-export async function fetchProduct(id: string) {
+export const fetchProduct = cache(async (id: string) => {
   const { data, error } = await getServerClient().from("products").select("*").eq("id", id).maybeSingle();
   if (error) {
     console.error("fetchProduct:", error.message);
     return null;
   }
   return data ? normalize(data) : null;
-}
+});
 
 /** Подставляет значения по умолчанию, если миграция v2 ещё не выполнена. */
 export function normalize(row: Record<string, unknown>): import("./types").Product {
@@ -49,7 +50,7 @@ export function normalize(row: Record<string, unknown>): import("./types").Produ
   };
 }
 
-export async function fetchSettings(): Promise<import("./types").ShopSettings> {
+export const fetchSettings = cache(async (): Promise<import("./types").ShopSettings> => {
   const empty = { logo_url: null, hero_url: null, hero_mobile_url: null, about: null, about_tj: null, shop_name: null, whatsapp: null, telegram: null, category_images: null };
   const { data, error } = await getServerClient().from("shop_settings").select("*").eq("id", 1).maybeSingle();
   if (error || !data) return empty;
@@ -64,4 +65,4 @@ export async function fetchSettings(): Promise<import("./types").ShopSettings> {
     telegram: data.telegram ?? null,
     category_images: data.category_images ?? null,
   };
-}
+});

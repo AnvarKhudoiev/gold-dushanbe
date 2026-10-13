@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { fetchProducts } from "@/lib/supabase";
 import { SHOP } from "@/lib/config";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const products = await fetchProducts();
