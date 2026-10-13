@@ -19,7 +19,14 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
     metadataBase: new URL(SHOP.siteUrl),
     title: { default: t.siteTitle.replace(SHOP.name, name), template: `%s | ${name}` },
     description: t.siteDesc,
-    icons: { icon: "/icon.svg" },
+    icons: {
+      icon: [
+        { url: "/icon-48.png", sizes: "48x48", type: "image/png" },
+        { url: "/icon-96.png", sizes: "96x96", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      ],
+      apple: "/apple-touch-icon.png",
+    },
     openGraph: { type: "website", siteName: name, locale: l === "tj" ? "tg_TJ" : "ru_RU" },
     alternates: {
       canonical: l === "tj" ? "/tj" : "/",
