@@ -1,6 +1,23 @@
 /** @type {import('next').NextConfig} */
+const supaHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "").hostname;
+  } catch {
+    return "";
+  }
+})();
+
 const nextConfig = {
   poweredByHeader: false,
+  // Картинки из Supabase Storage сжимаются и режутся под размер экрана (WebP/AVIF) через Vercel
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 2592000,
+    remotePatterns: [
+      ...(supaHost ? [{ protocol: "https", hostname: supaHost, pathname: "/storage/v1/object/public/**" }] : []),
+      { protocol: "https", hostname: "**.supabase.co", pathname: "/storage/v1/object/public/**" },
+    ],
+  },
   // Русская версия живёт на «/», внутри это страницы /ru
   async rewrites() {
     return [

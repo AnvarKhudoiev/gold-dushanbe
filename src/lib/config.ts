@@ -34,3 +34,14 @@ export function resolveShop(settings?: { shop_name?: string | null; whatsapp?: s
     telegram: (settings?.telegram || "").trim().replace(/^(https?:\/\/)?(t\.me\/)?@?/i, "").replace(/\/.*$/, "") || SHOP.telegram,
   };
 }
+
+/** Только картинки из нашего Supabase Storage прогоняем через оптимизатор; остальные (внешние ссылки) отдаём как есть. */
+export function canOptimize(url: string): boolean {
+  try {
+    const h = new URL(url).hostname;
+    const own = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "http://x").hostname;
+    return h === own || h.endsWith(".supabase.co");
+  } catch {
+    return false;
+  }
+}

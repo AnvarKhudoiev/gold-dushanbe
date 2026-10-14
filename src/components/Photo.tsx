@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Art from "./Art";
+import { canOptimize } from "@/lib/config";
 import type { Product } from "@/lib/types";
 import { T, pName, type Lang } from "@/lib/i18n";
 
@@ -12,7 +14,16 @@ export default function Photo({ p, lang, tags = true, eager = false, children }:
   return (
     <div className="ph">
       {p.image_url && !broken ? (
-        <img src={p.image_url} alt={pName(p, lang)} loading={eager ? "eager" : "lazy"} decoding="async" fetchPriority={eager ? "high" : "auto"} onError={() => setBroken(true)} />
+        <Image
+          src={p.image_url}
+          alt={pName(p, lang)}
+          fill
+          sizes={tags ? "(min-width:720px) 480px, 100vw" : "(max-width:620px) 50vw, (max-width:1000px) 33vw, 25vw"}
+          quality={72}
+          priority={eager}
+          unoptimized={!canOptimize(p.image_url)}
+          onError={() => setBroken(true)}
+        />
       ) : (
         <Art category={p.category} />
       )}

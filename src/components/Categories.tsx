@@ -4,15 +4,17 @@ import type { Product } from "@/lib/types";
 import { CATEGORIES } from "@/lib/config";
 import { T, type Lang } from "@/lib/i18n";
 import Art from "./Art";
+import { canOptimize } from "@/lib/config";
 import { useStore } from "./StoreContext";
 import { useState } from "react";
+import Image from "next/image";
 
 function Tile({ c, src, label, onPick }: { c: string; src: string | null; label: string; onPick: () => void }) {
   const [broken, setBroken] = useState(false);
   return (
     <button type="button" className="ctile" onClick={onPick}>
       <span className="cph">
-        {src && !broken ? <img src={src} alt="" loading="lazy" decoding="async" onError={() => setBroken(true)} /> : <Art category={c} />}
+        {src && !broken ? <Image src={src} alt="" fill sizes="(max-width:620px) 50vw, 330px" quality={72} unoptimized={!canOptimize(src)} onError={() => setBroken(true)} /> : <Art category={c} />}
       </span>
       <span className="cl">
         <span>{label}</span>

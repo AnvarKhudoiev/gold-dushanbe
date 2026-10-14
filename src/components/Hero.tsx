@@ -1,5 +1,7 @@
+import { getImageProps } from "next/image";
 import { T, type Lang } from "@/lib/i18n";
 import { CoverArt } from "./Art";
+import { canOptimize } from "@/lib/config";
 
 const I = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 
@@ -7,18 +9,21 @@ const I = { fill: "none", stroke: "currentColor", strokeLinecap: "round" as cons
 export default function Hero({ lang, heroUrl, heroMobileUrl }: { lang: Lang; heroUrl: string | null; heroMobileUrl?: string | null }) {
   const t = T[lang];
   const words = t.tagHdr.split(" · ");
+  const dUrl = heroUrl || heroMobileUrl;
+  const mUrl = heroMobileUrl || heroUrl;
+  const common = { alt: "", fill: true, sizes: "100vw", quality: 70, priority: true } as const;
+  const desk = dUrl ? getImageProps({ ...common, src: dUrl, unoptimized: !canOptimize(dUrl) }).props : null;
+  const mob = mUrl && mUrl !== dUrl ? getImageProps({ ...common, src: mUrl, unoptimized: !canOptimize(mUrl) }).props : null;
   const unit = [...words, ...words, ...words, ...words];
   return (
     <>
-    {heroUrl || heroMobileUrl ? (
-      <>
-        <link rel="preload" as="image" href={heroUrl || heroMobileUrl || ""} media="(min-width:621px)" fetchPriority="high" />
-        <link rel="preload" as="image" href={heroMobileUrl || heroUrl || ""} media="(max-width:620px)" fetchPriority="high" />
-      </>
-    ) : null}
     <section className={"hero2" + (heroUrl || heroMobileUrl ? "" : " nophoto")}>
-      {heroUrl || heroMobileUrl ? (
-        <div className="bg" style={{ "--d": `url(${heroUrl || heroMobileUrl})`, "--m": `url(${heroMobileUrl || heroUrl})` } as React.CSSProperties} />
+      {desk ? (
+        <picture className="bg">
+          {mob ? <source media="(max-width:620px)" srcSet={mob.srcSet} sizes="100vw" /> : null}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img {...desk} alt="" fetchPriority="high" />
+        </picture>
       ) : (
         <div className="cart">
           <CoverArt />
